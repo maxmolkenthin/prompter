@@ -65,8 +65,17 @@ HEAD = """<!doctype html>
 body{margin:0}
 img{max-width:100%}
 </style>
-<script src="peerjs.min.js"></script>
-<script src="pako_inflate.min.js"></script>
+<script>
+/* Fehler beim Laden der Bibliotheken festhalten, damit die Startseite den Grund zeigen kann */
+window.__bootErrors = [];
+window.addEventListener('error', function (e) {
+  var t = e && e.target;
+  if (t && t.tagName === 'SCRIPT') window.__bootErrors.push('nicht geladen: ' + String(t.src).split('/').pop().split('?')[0]);
+  else if (e && e.message) window.__bootErrors.push(e.message + ' (' + String(e.filename || '').split('/').pop().split('?')[0] + ')');
+}, true);
+</script>
+<script src="peerjs.min.js?v=__VERSION__"></script>
+<script src="pako_inflate.min.js?v=__VERSION__"></script>
 </head>
 <body>
 """
@@ -74,7 +83,7 @@ img{max-width:100%}
 FOOT = """
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js?v=__VERSION__').catch(() => {}));
 }
 </script>
 </body>
@@ -105,9 +114,14 @@ def icon(size: int) -> Image.Image:
 
 def main() -> None:
     OUT.mkdir(exist_ok=True)
-    html = HEAD + legacy_html(SRC) + FOOT
     (OUT / "peerjs.min.js").write_text(esbuild((VENDOR / "peerjs-1.5.4.min.js").read_text(encoding="utf-8")), encoding="utf-8")
     shutil.copyfile(VENDOR / "pako_inflate-2.1.0.min.js", OUT / "pako_inflate.min.js")
+    body = legacy_html(SRC)
+    # Version aus App-Code und Bibliotheken. Sie hängt an jeder Dateiadresse (?v=…), damit kein
+    # Browser- oder GitHub-Zwischenspeicher eine alte Bibliothek mit der neuen App mischt.
+    libs = "".join((OUT / f).read_text(encoding="utf-8") for f in ("peerjs.min.js", "pako_inflate.min.js"))
+    digest = hashlib.sha256((HEAD + body + FOOT + libs).encode()).hexdigest()[:10]
+    html = (HEAD + body + FOOT).replace("__VERSION__", digest)
     (OUT / "index.html").write_text(html, encoding="utf-8")
 
     icon(512).save(OUT / "icon-512.png")
@@ -130,9 +144,6 @@ def main() -> None:
     }
     (OUT / "manifest.webmanifest").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    # Cache-Version aus dem Inhalt, damit jede neue Fassung den Offline-Speicher erneuert.
-    libs = "".join((OUT / f).read_text(encoding="utf-8") for f in ("peerjs.min.js", "pako_inflate.min.js"))
-    digest = hashlib.sha256((html + libs).encode()).hexdigest()[:10]
     sw = (ROOT / "sw.template.js").read_text(encoding="utf-8").replace("__VERSION__", digest)
     (OUT / "sw.js").write_text(sw, encoding="utf-8")
     print("gebaut:", digest)

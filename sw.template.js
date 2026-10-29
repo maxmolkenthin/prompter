@@ -1,10 +1,17 @@
-// Offline-Speicher für die eigenständige Version. Eigene Dateien: erst Netz, sonst Cache.
+// Offline-Speicher für die eigenständige Version. Eigene Dateien: erst Netz (am Browser-
+// Zwischenspeicher vorbei, damit nach einem Update nie alte Dateien kommen), sonst Cache.
 // Schriften von Google: erst Cache, sonst Netz.
-const CACHE = 'colada-prompter-__VERSION__';
-const ASSETS = ['./', './index.html', './peerjs.min.js', './pako_inflate.min.js','./manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const V = '__VERSION__';
+const CACHE = 'colada-prompter-' + V;
+const ASSETS = ['./', './index.html', './peerjs.min.js?v=' + V, './pako_inflate.min.js?v=' + V,
+  './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c => c.addAll(ASSETS.map(u => new Request(u, { cache: 'no-cache' }))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', e => {
@@ -29,8 +36,8 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (url.origin === self.location.origin) {
     e.respondWith(
-      fetch(req).then(res => store(req, res))
-        .catch(() => caches.match(req, { ignoreSearch: true }).then(m => m || caches.match('./index.html')))
+      fetch(req, { cache: 'no-cache' }).then(res => store(req, res))
+        .catch(() => caches.match(req).then(m => m || caches.match(req, { ignoreSearch: true })).then(m => m || caches.match('./index.html')))
     );
   } else if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     e.respondWith(caches.match(req).then(m => m || fetch(req).then(res => store(req, res))));

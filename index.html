@@ -17,8 +17,17 @@
 body{margin:0}
 img{max-width:100%}
 </style>
-<script src="peerjs.min.js"></script>
-<script src="pako_inflate.min.js"></script>
+<script>
+/* Fehler beim Laden der Bibliotheken festhalten, damit die Startseite den Grund zeigen kann */
+window.__bootErrors = [];
+window.addEventListener('error', function (e) {
+  var t = e && e.target;
+  if (t && t.tagName === 'SCRIPT') window.__bootErrors.push('nicht geladen: ' + String(t.src).split('/').pop().split('?')[0]);
+  else if (e && e.message) window.__bootErrors.push(e.message + ' (' + String(e.filename || '').split('/').pop().split('?')[0] + ')');
+}, true);
+</script>
+<script src="peerjs.min.js?v=7f52fc618c"></script>
+<script src="pako_inflate.min.js?v=7f52fc618c"></script>
 </head>
 <body>
 <title>Colada Prompter</title>
@@ -194,6 +203,10 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
       <button class="tile" data-go="remote"><b>Fernbedienung</b><span id="tileRemote">Handy oder zweites Tablet steuert den Prompter, live und ohne Kopplung.</span></button>
     </div>
     <div id="homeStatus" class="status">Verbinde …</div>
+    <div id="homeDiag" class="card" hidden>
+      <p id="homeDiagText" class="empty-note"></p>
+      <div class="row"><button id="btnReload" class="primary">App neu laden</button></div>
+    </div>
     <div id="homeCode" class="code-card" hidden>
       <span class="muted">Kopplungscode dieses Geräts</span>
       <b class="mono" id="homeCodeVal">····</b>
@@ -219,6 +232,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
           <h3>Kapitelmarken</h3>
           <p>Eine Zeile, die mit <kbd>#</kbd> beginnt, wird zur Kapitelmarke, zum Beispiel <span class="mono"># Intro</span>. Im Skript-Editor setzt der Knopf „Kapitelmarke“ sie an der Cursorzeile.</p>
           <h3 style="margin-top:14px">Fernbedienung</h3>
+          <p id="helpReloadWrap" hidden><button id="btnReload2" class="ghost">App neu laden (neueste Version holen)</button></p>
           <p id="helpRemote">Denselben Link auf dem zweiten Gerät öffnen und „Fernbedienung“ wählen. Beide Geräte brauchen Internet und müssen mit dem Claude-Konto angemeldet sein, das Zugriff auf diese App hat.</p>
           <h3 style="margin-top:14px">Steuerung durch Claude</h3>
           <p id="helpClaude">Sag Claude zum Beispiel „Lade das Skript aus dem ClickUp-Projekt Müller Recruitingfilm in den Prompter“. Claude holt den Text, teilt ihn in Kapitel und setzt ihn als aktives Skript. Auch „Starte den Prompter“ oder „Spring zu Kapitel 3“ geht. Je nach Verbindung reagiert der Prompter sofort oder nach bis zu 30 Sekunden.</p>
@@ -1857,6 +1871,35 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
       onActiveChanged();
     }
   };
+  function showDiag() {
+    const errs = window.__bootErrors || [];
+    let t;
+    if (typeof window.RTCPeerConnection !== "function" && typeof window.webkitRTCPeerConnection !== "function")
+      t = "Dieser Browser kann keine Direktverbindung (WebRTC). Fernbedienung per Handy geht hier nicht, Bluetooth-Clicker schon.";
+    else if (errs.length)
+      t = "Die Verbindungsbibliothek konnte nicht starten: " + errs.slice(0, 2).join(" \xB7 ") + ". Tippe \u201EApp neu laden\u201C.";
+    else
+      t = "Die Verbindungsbibliothek wurde nicht geladen. Tippe \u201EApp neu laden\u201C.";
+    $("#homeDiagText").textContent = t + " (iOS/Browser: " + navigator.userAgent.replace(/^Mozilla\/5\.0 /, "").slice(0, 120) + ")";
+    $("#homeDiag").hidden = false;
+  }
+  async function hardReload() {
+    $("#btnReload").disabled = true;
+    $("#btnReload").textContent = "Lade neu \u2026";
+    try {
+      const ks = await caches.keys();
+      await Promise.all(ks.map((k) => caches.delete(k)));
+    } catch (e) {
+    }
+    try {
+      const rs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(rs.map((r) => r.unregister()));
+    } catch (e) {
+    }
+    location.replace(location.pathname + "?r=" + Date.now() + location.hash);
+  }
+  $("#btnReload").addEventListener("click", hardReload);
+  $("#btnReload2").addEventListener("click", hardReload);
   function connectDb() {
     S.scripts.clear();
     db.collection("scripts").onSnapshot((snap) => {
@@ -1938,6 +1981,8 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
       if (room) connectRoom();
     }
     if (STANDALONE) {
+      if (!P2P.on) showDiag();
+      $("#helpReloadWrap").hidden = false;
       $("#btnImport").hidden = false;
       $("#tileRemote").textContent = "Handy oder zweites Tablet steuert den Prompter. Einmal mit dem Code vom iPad koppeln.";
       $("#helpRemote").textContent = "Auf dem Handy dieselbe Adresse \xF6ffnen, \u201EFernbedienung\u201C w\xE4hlen und den 4-stelligen Code vom iPad eingeben. Beide Ger\xE4te brauchen daf\xFCr Internet (WLAN oder Hotspot). Skripte liegen nur auf dem iPad; neue kommen per Einf\xFCgen, per Fernbedienung oder per Import-Link von Claude.";
@@ -1963,7 +2008,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
 
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js?v=7f52fc618c').catch(() => {}));
 }
 </script>
 </body>

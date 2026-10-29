@@ -171,6 +171,10 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
       <button class="tile" data-go="remote"><b>Fernbedienung</b><span id="tileRemote">Handy oder zweites Tablet steuert den Prompter, live und ohne Kopplung.</span></button>
     </div>
     <div id="homeStatus" class="status">Verbinde …</div>
+    <div id="homeDiag" class="card" hidden>
+      <p id="homeDiagText" class="empty-note"></p>
+      <div class="row"><button id="btnReload" class="primary">App neu laden</button></div>
+    </div>
     <div id="homeCode" class="code-card" hidden>
       <span class="muted">Kopplungscode dieses Geräts</span>
       <b class="mono" id="homeCodeVal">····</b>
@@ -196,6 +200,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
           <h3>Kapitelmarken</h3>
           <p>Eine Zeile, die mit <kbd>#</kbd> beginnt, wird zur Kapitelmarke, zum Beispiel <span class="mono"># Intro</span>. Im Skript-Editor setzt der Knopf „Kapitelmarke“ sie an der Cursorzeile.</p>
           <h3 style="margin-top:14px">Fernbedienung</h3>
+          <p id="helpReloadWrap" hidden><button id="btnReload2" class="ghost">App neu laden (neueste Version holen)</button></p>
           <p id="helpRemote">Denselben Link auf dem zweiten Gerät öffnen und „Fernbedienung“ wählen. Beide Geräte brauchen Internet und müssen mit dem Claude-Konto angemeldet sein, das Zugriff auf diese App hat.</p>
           <h3 style="margin-top:14px">Steuerung durch Claude</h3>
           <p id="helpClaude">Sag Claude zum Beispiel „Lade das Skript aus dem ClickUp-Projekt Müller Recruitingfilm in den Prompter“. Claude holt den Text, teilt ihn in Kapitel und setzt ihn als aktives Skript. Auch „Starte den Prompter“ oder „Spring zu Kapitel 3“ geht. Je nach Verbindung reagiert der Prompter sofort oder nach bis zu 30 Sekunden.</p>
@@ -1387,6 +1392,30 @@ if (bc) bc.onmessage = e => {
   if (d.type === 'active' && S.scripts.has(d.id)) { S.activeId = d.id; LS.set('tp.active', d.id); onActiveChanged(); }
 };
 
+/* ---------- Diagnose und Neuladen (eigenständige Version) ----------
+   Startet die Verbindungsbibliothek nicht, zeigt die Startseite den Grund und einen
+   Knopf, der Offline-Speicher und Zwischenspeicher leert und alles frisch lädt. */
+function showDiag() {
+  const errs = window.__bootErrors || [];
+  let t;
+  if (typeof window.RTCPeerConnection !== 'function' && typeof window.webkitRTCPeerConnection !== 'function')
+    t = 'Dieser Browser kann keine Direktverbindung (WebRTC). Fernbedienung per Handy geht hier nicht, Bluetooth-Clicker schon.';
+  else if (errs.length)
+    t = 'Die Verbindungsbibliothek konnte nicht starten: ' + errs.slice(0, 2).join(' · ') + '. Tippe „App neu laden“.';
+  else
+    t = 'Die Verbindungsbibliothek wurde nicht geladen. Tippe „App neu laden“.';
+  $('#homeDiagText').textContent = t + ' (iOS/Browser: ' + navigator.userAgent.replace(/^Mozilla\/5\.0 /, '').slice(0, 120) + ')';
+  $('#homeDiag').hidden = false;
+}
+async function hardReload() {
+  $('#btnReload').disabled = true; $('#btnReload').textContent = 'Lade neu …';
+  try { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); } catch (e) {}
+  try { const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r => r.unregister())); } catch (e) {}
+  location.replace(location.pathname + '?r=' + Date.now() + location.hash);
+}
+$('#btnReload').addEventListener('click', hardReload);
+$('#btnReload2').addEventListener('click', hardReload);
+
 /* ---------- Start ---------- */
 function connectDb() {
   S.scripts.clear();
@@ -1446,6 +1475,8 @@ async function boot() {
     if (room) connectRoom();
   }
   if (STANDALONE) {
+    if (!P2P.on) showDiag();
+    $('#helpReloadWrap').hidden = false;
     $('#btnImport').hidden = false;
     $('#tileRemote').textContent = 'Handy oder zweites Tablet steuert den Prompter. Einmal mit dem Code vom iPad koppeln.';
     $('#helpRemote').textContent = 'Auf dem Handy dieselbe Adresse öffnen, „Fernbedienung“ wählen und den 4-stelligen Code vom iPad eingeben. Beide Geräte brauchen dafür Internet (WLAN oder Hotspot). Skripte liegen nur auf dem iPad; neue kommen per Einfügen, per Fernbedienung oder per Import-Link von Claude.';
