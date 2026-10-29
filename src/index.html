@@ -16,7 +16,7 @@
 [hidden]{display:none!important}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 button,select,input,textarea{font:inherit;color:inherit}
 button{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 14px;min-height:44px;cursor:pointer;touch-action:manipulation;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
 button:hover{border-color:#414955}
@@ -40,7 +40,7 @@ h3{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--mute
 .status::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--muted)}
 .status[data-s=live]::before{background:var(--ok);box-shadow:0 0 0 3px rgba(60,203,140,.18)}
 .status[data-s=sync]::before{background:var(--warn)}
-.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-block:10px;border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-block:10px;border-bottom:1px solid var(--line);position:-webkit-sticky;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
 .bar .grow{flex:1 1 auto}
 
 /* Start */
@@ -89,20 +89,20 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
 .save{font-size:13px}
 
 /* Prompter */
-#v-prompter{position:fixed;inset:0;z-index:20;overflow:hidden;--pbg:#000;--pfg:#fff;--pcue:#ffc23d;--fs:64px;--mx:8%;--rl:30%;background:var(--pbg);color:var(--pfg)}
+#v-prompter{position:fixed;top:0;right:0;bottom:0;left:0;z-index:20;overflow:hidden;--pbg:#000;--pfg:#fff;--pcue:#ffc23d;--pfade1:rgba(0,0,0,.9);--pfade2:rgba(0,0,0,.4);--fs:64px;--mx:8%;--rl:30%;background:var(--pbg);color:var(--pfg)}
 #v-prompter[data-theme=yb]{--pfg:#ffe14a}
-#v-prompter[data-theme=bw]{--pbg:#fff;--pfg:#000;--pcue:#9a5200}
-#stage{position:absolute;inset:0;touch-action:none;user-select:none;-webkit-user-select:none}
+#v-prompter[data-theme=bw]{--pbg:#fff;--pfg:#000;--pcue:#9a5200;--pfade1:rgba(255,255,255,.9);--pfade2:rgba(255,255,255,.4)}
+#stage{position:absolute;top:0;right:0;bottom:0;left:0;touch-action:none;user-select:none;-webkit-user-select:none}
 #v-prompter:not(.ui) #stage{cursor:none}
-#flip{position:absolute;inset:0}
+#flip{position:absolute;top:0;right:0;bottom:0;left:0}
 #track{position:absolute;left:var(--mx);right:var(--mx);top:calc(var(--rl) - var(--fs) * .66);font-size:var(--fs);line-height:1.32;font-weight:700;will-change:transform;overflow-wrap:break-word}
 #track p{margin:0 0 .85em}
 .cue{display:flex;gap:.6em;align-items:baseline;font-size:.46em;line-height:1.25;color:var(--pcue);text-transform:uppercase;letter-spacing:.07em;border-top:3px solid currentColor;padding-top:.35em;margin:.4em 0 .9em}
 .cue-n{font-family:var(--f-mono)}
 .end{font-size:.46em;color:var(--pcue);text-align:center;letter-spacing:.1em;padding-bottom:100vh}
-.p-empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-size:24px;color:var(--muted);padding:24px}
-.fade{position:absolute;left:0;right:0;top:0;height:calc(var(--rl) - var(--fs) * .7);background:linear-gradient(to bottom,color-mix(in srgb,var(--pbg) 90%,transparent),color-mix(in srgb,var(--pbg) 40%,transparent));pointer-events:none;z-index:1}
-#readline{position:absolute;left:0;right:0;top:var(--rl);height:0;border-top:1px solid color-mix(in srgb,var(--tally) 30%,transparent);pointer-events:none;z-index:2}
+.p-empty{position:absolute;top:0;right:0;bottom:0;left:0;display:grid;place-items:center;text-align:center;font-size:24px;color:var(--muted);padding:24px}
+.fade{position:absolute;left:0;right:0;top:0;height:calc(var(--rl) - var(--fs) * .7);background:linear-gradient(to bottom,var(--pfade1),var(--pfade2));pointer-events:none;z-index:1}
+#readline{position:absolute;left:0;right:0;top:var(--rl);height:0;border-top:1px solid rgba(255,75,43,.3);pointer-events:none;z-index:2}
 #readline::before,#readline::after{content:"";position:absolute;top:-13px;border:13px solid transparent}
 #readline::before{left:0;border-left:20px solid var(--tally)}
 #readline::after{right:0;border-right:20px solid var(--tally)}
@@ -143,6 +143,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
 .auto{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .auto-state{font-size:14px;color:var(--muted)}
 .auto-state.err{color:#ff8f7a}
+#rcState.ok{color:#dcffee;background:#1d3a2d;border:1px solid var(--ok);border-radius:10px;padding:10px 12px;font-size:16px}
 .stepper{display:grid;grid-template-columns:56px 1fr 56px;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px}
 .stepper button{font-size:22px;padding:0}
 .stepper div{text-align:center;font-size:13px;color:var(--muted)}
@@ -152,6 +153,9 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
 
 @media (max-width:880px){.ed-grid{grid-template-columns:minmax(0,1fr)}#text{min-height:46vh}}
 @media (max-width:420px){.r-main button{min-height:76px}.bar .save{order:9;width:100%}}
+/* Ältere Safari (iOS 12–14.0) kennen kein gap bei Flexbox: Abstände per Rand nachbilden */
+.nogap .bar>*,.nogap .row>*,.nogap .ed-tools>*,.nogap .grp>*,.nogap .ctrl>*,.nogap .r-row>*,.nogap .pair>*,.nogap .auto>*,.nogap .tile-row>*{margin:4px}
+.nogap .status::before{margin-right:8px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -356,6 +360,28 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
   </div>
 </section>
 
+<section id="v-receive" class="view" hidden>
+  <header class="bar gut">
+    <button class="ghost" data-go="home">← Start</button>
+  </header>
+  <div class="r-wrap gut">
+    <div class="r-now">
+      <h3>Skript empfangen</h3>
+      <div id="rcTitle" class="r-title">–</div>
+      <div id="rcMeta" class="muted mono"></div>
+    </div>
+    <div class="card">
+      <h3><label for="rcCode">An das iPad im Teleprompter senden</label></h3>
+      <div class="pair">
+        <input id="rcCode" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="1234">
+        <button id="rcSend" class="primary">Senden</button>
+      </div>
+      <p id="rcState" class="empty-note" role="status"></p>
+    </div>
+    <button id="rcLocal">Auf diesem Gerät im Prompter öffnen</button>
+  </div>
+</section>
+
 </div>
 
 <script>
@@ -368,7 +394,16 @@ const LS = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 };
-const ICON_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+// Flexbox-gap gibt es in Safari erst ab 14.1; sonst Klasse "nogap" für Ersatzabstände setzen.
+(function () {
+  const f = document.createElement('div');
+  f.style.cssText = 'display:flex;flex-direction:column;row-gap:1px;position:absolute;visibility:hidden';
+  f.appendChild(document.createElement('div')); f.appendChild(document.createElement('div'));
+  document.body.appendChild(f);
+  if (f.scrollHeight !== 1) document.documentElement.classList.add('nogap');
+  f.remove();
+})();
+const ICON_PLAY ='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
 const ICON_PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
 const WPM = 130;
 
@@ -812,6 +847,19 @@ stage.addEventListener('pointermove', e => {
 const endDrag = () => { if (dragging && !dragging.moved) setPlay(!S.playing); dragging = null; };
 stage.addEventListener('pointerup', endDrag);
 stage.addEventListener('pointercancel', () => { dragging = null; });
+// iOS 12 kennt keine Pointer Events: dieselbe Bedienung über Touch-Ereignisse.
+if (!window.PointerEvent) {
+  stage.addEventListener('touchstart', e => { dragging = { y: e.touches[0].clientY, pos: S.pos, moved: false }; }, { passive: true });
+  stage.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (!dragging) return;
+    const dy = e.touches[0].clientY - dragging.y;
+    if (Math.abs(dy) > 8) dragging.moved = true;
+    if (dragging.moved) { S.target = null; S.pos = clamp(dragging.pos + (S.set.mirrorV ? 1 : -1) * dy, 0, maxPos()); }
+  }, { passive: false });
+  stage.addEventListener('touchend', e => { e.preventDefault(); endDrag(); }, { passive: false });
+  stage.addEventListener('touchcancel', () => { dragging = null; });
+}
 stage.addEventListener('wheel', e => { e.preventDefault(); S.target = null; S.pos = clamp(S.pos + (S.set.mirrorV ? -1 : 1) * e.deltaY, 0, maxPos()); }, { passive: false });
 
 $('#ctrl').addEventListener('click', e => {
@@ -1031,7 +1079,7 @@ function p2pStart() {
   // PROMPTER_PEER_OPTS: nur für Tests mit eigenem Kopplungsserver, sonst gilt der PeerJS-Standarddienst.
   const peer = new window.Peer(PEER_PREFIX + code, Object.assign({ debug: 0 }, window.PROMPTER_PEER_OPTS || {}));
   P2P.peer = peer;
-  peer.on('open', () => { P2P.status = 'ready'; P2P.idTries = 0; renderCode(); renderConn(); if (P2P.target && S.view === 'remote') p2pConnect(P2P.target); });
+  peer.on('open', () => { P2P.status = 'ready'; P2P.idTries = 0; renderCode(); renderConn(); if (P2P.target && S.view === 'remote') p2pConnect(P2P.target); else if (pendingImport && S.view === 'receive') p2pConnect($('#rcCode').value); });
   peer.on('connection', c => {
     c.on('open', () => { P2P.conns.add(c); P2P.sentKey = ''; pushPresence(); if (S.view === 'prompter') renderHud(); });
     c.on('data', d => onHostData(c, d));
@@ -1052,6 +1100,7 @@ function p2pStart() {
       setTimeout(p2pStart, 3000);
     } else if (t === 'peer-unavailable') {
       P2P.rstatus = 'notfound'; renderRemote();
+      if (S.view === 'receive') rcState('iPad ' + P2P.target + ' nicht gefunden. Ist die App dort offen und online? Neuer Versuch läuft …');
     } else if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed' || t === 'browser-incompatible') {
       P2P.status = 'offline'; renderConn();
       if (t !== 'browser-incompatible') setTimeout(() => { try { if (!peer.destroyed) peer.reconnect(); } catch {} }, 5000);
@@ -1092,21 +1141,26 @@ function p2pConnect(code) {
   if (P2P.rconn) { try { P2P.rconn.close(); } catch {} P2P.rconn = null; }
   if (!P2P.peer || !P2P.peer.open) { P2P.rstatus = 'waiting'; renderRemote(); return; }
   P2P.rstatus = 'connecting'; renderRemote();
-  const c = P2P.peer.connect(PEER_PREFIX + code, { reliable: true });
+  // JSON statt Binärformat: läuft auch auf alten iPads (iOS 12) zuverlässig.
+  const c = P2P.peer.connect(PEER_PREFIX + code, { reliable: true, serialization: 'json' });
   P2P.rconn = c;
-  c.on('open', () => { if (P2P.rconn === c) { P2P.rstatus = 'open'; renderRemote(); } });
+  c.on('open', () => { if (P2P.rconn === c) { P2P.rstatus = 'open'; renderRemote(); flushPendingImport(); } });
   c.on('data', d => {
     if (P2P.rconn !== c || !d || typeof d !== 'object') return;
     if (d.type === 'state') { P2P.state = d; P2P.stateAt = Date.now(); renderRemote(); }
-    if (d.type === 'imported') $('#rSendState').textContent = d.ok ? 'Auf dem iPad angelegt: ' + String(d.title || '')
-      : 'Das iPad konnte den Text nicht übernehmen. ' + (IMPORT_ERR[d.reason] || '');
+    if (d.type === 'imported') {
+      const msg = d.ok ? '✓ Auf dem iPad angelegt: ' + String(d.title || '') + '. Es ist dort jetzt das aktive Skript.'
+        : 'Das iPad konnte den Text nicht übernehmen. ' + (IMPORT_ERR[d.reason] || '');
+      $('#rSendState').textContent = msg;
+      if (S.view === 'receive') rcState(msg);
+    }
   });
   c.on('close', () => { if (P2P.rconn === c) { P2P.rconn = null; P2P.state = null; P2P.rstatus = 'closed'; renderRemote(); } });
   c.on('error', () => { if (P2P.rconn === c) { P2P.rstatus = 'closed'; renderRemote(); } });
 }
 // Fernbedienung hält die Verbindung: alle 4 s neu versuchen, solange sie offen ist und ein Code gespeichert ist.
 setInterval(() => {
-  if (!P2P.on || S.view !== 'remote' || !P2P.target || P2P.rstatus === 'self') return;
+  if (!P2P.on || !(S.view === 'remote' || (S.view === 'receive' && pendingImport)) || !P2P.target || P2P.rstatus === 'self') return;
   if ((P2P.rconn && (P2P.rconn.open || P2P.rstatus === 'connecting')) || !P2P.peer || !P2P.peer.open) return;
   p2pConnect(P2P.target);
 }, 4000);
@@ -1189,8 +1243,18 @@ function guessTitle(text) {
 // Legt das Skript an; wirft {code} wie resolveImport.
 async function importAny(input, title) {
   const { title: t, text: x } = await resolveImport(input, title);
+  const name = String(t || '').trim().slice(0, 80) || guessTitle(x);
+  // Gleicher Titel: vorhandenes Skript aktualisieren statt doppelt anlegen.
+  const same = sorted().find(s => s.title === name);
+  if (same) {
+    same.text = x.slice(0, 200000); same.updatedAt = Date.now();
+    writeScript(same);
+    if (S.activeId === same.id) onActiveChanged(); else setActive(same.id, true);
+    pushPresence();
+    return same;
+  }
   const sc = newScript(x.slice(0, 200000));
-  sc.title = String(t || '').trim().slice(0, 80) || guessTitle(x);
+  sc.title = name;
   sc.updatedAt = Date.now();
   writeScript(sc);
   renderEditor(true);
@@ -1207,17 +1271,58 @@ $('#importGo').addEventListener('click', async () => {
   setSaveState('Importiert: ' + sc.title);
 });
 
+/* ---------- Skript empfangen (Ein-Tipp-Link von Claude) ----------
+   Der Link öffnet diese Seite auf dem Handy. Ist schon ein iPad gekoppelt, geht das
+   Skript sofort dorthin; sonst einmal den Code eingeben. */
+let received = null, pendingImport = null;
+const rcState = t => { const el = $('#rcState'); el.textContent = t; el.classList.toggle('ok', t.charAt(0) === '✓'); };
+function showReceive(d) {
+  received = d;
+  const w = wordCount(d.text);
+  $('#rcTitle').textContent = d.title || guessTitle(d.text);
+  $('#rcMeta').textContent = chaptersOf(d.text).length + ' Kapitel · ' + w + ' Wörter · ca. ' + fmt(w / WPM * 60) + ' Min';
+  $('#rcCode').value = P2P.target || '';
+  show('receive');
+  if (!P2P.on) { $('#rcSend').disabled = true; rcState('Senden geht hier nicht. Öffne das Skript auf diesem Gerät.'); return; }
+  if (P2P.target) sendReceived();
+  else rcState('Code vom iPad eingeben (steht dort auf der Startseite), dann „Senden“.');
+}
+function sendReceived() {
+  if (!received) return;
+  const code = $('#rcCode').value.replace(/\D/g, '');
+  if (code.length !== 4) { rcState('Bitte den 4-stelligen Code vom iPad eingeben.'); return; }
+  pendingImport = { title: String(received.title || '').slice(0, 80), text: received.text.slice(0, 200000) };
+  if (P2P.rconn && P2P.rconn.open && P2P.target === code) { flushPendingImport(); return; }
+  rcState('Verbinde mit iPad ' + code + ' …');
+  p2pConnect(code);
+}
+function flushPendingImport() {
+  if (!pendingImport || !(P2P.rconn && P2P.rconn.open)) return;
+  P2P.rconn.send({ type: 'import', title: pendingImport.title, text: pendingImport.text });
+  pendingImport = null;
+  rcState('Gesendet, warte auf Bestätigung vom iPad …');
+}
+$('#rcSend').addEventListener('click', sendReceived);
+$('#rcCode').addEventListener('keydown', e => { if (e.key === 'Enter') sendReceived(); });
+$('#rcLocal').addEventListener('click', () => {
+  if (!received) return;
+  importAny(received.text, received.title).then(() => go('prompter'), () => rcState('Das Skript konnte nicht angelegt werden.'));
+});
+
 /* ---------- Ansichten ---------- */
-const VIEWS = ['home', 'editor', 'prompter', 'remote'];
+const VIEWS = ['home', 'editor', 'prompter', 'remote', 'receive'];
 function go(v) { const h = v === 'home' ? '' : v; if (location.hash.slice(1) === h) show(v); else location.hash = h; }
 function route() {
   const h = location.hash.slice(1);
-  if (STANDALONE && h.startsWith('i=')) {
-    try { history.replaceState(null, '', location.pathname + location.search + '#editor'); } catch {}
-    show('editor');
-    importAny(h, '').then(sc => setSaveState('Importiert: ' + sc.title), () => setSaveState('Import-Link ungültig oder unvollständig'));
+  if (STANDALONE && (h.startsWith('s=') || h.startsWith('i='))) {
+    try { history.replaceState(null, '', location.pathname + location.search + '#receive'); } catch {}
+    resolveImport('#i=' + h.slice(2), '').then(showReceive, e => {
+      show('home');
+      $('#homeStatus').textContent = IMPORT_ERR[e && e.code] || 'Der Link konnte nicht gelesen werden.';
+    });
     return;
   }
+  if (h === 'receive' && !received) { show('home'); return; }
   show(VIEWS.includes(h) ? h : 'home');
 }
 function show(v) {

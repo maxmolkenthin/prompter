@@ -69,29 +69,30 @@ Befehle (`value` nur, wo angegeben):
 
 Der Prompter führt Befehle nur aus, wenn auf dem Gerät die Ansicht „Prompter“ offen ist. Je nach Verbindung reagiert er sofort oder nach bis zu 30 Sekunden.
 
-## Variante ohne Claude-Konto: Import-Link für die GitHub-Version
+## Variante ohne Claude-Konto: Ein-Tipp-Link für die GitHub-Version
 
-Die eigenständige App unter **https://maxmolkenthin.github.io/prompter/** hat keine Datenbank. Wenn der Nutzer „Import-Link“, „GitHub-Version“, „iPad ohne Konto“ sagt, oder fragt, wie das Skript auf das Studio-iPad kommt:
+Die eigenständige App unter **https://maxmolkenthin.github.io/prompter/** hat keine Datenbank. Sie ist die Standardlösung für das Studio-iPad (läuft auch auf alten iPads mit iOS 12). Wenn der Nutzer „in den Prompter“, „aufs iPad“, „Import-Link“, „GitHub-Version“ sagt oder die claude.ai-Version nicht passt:
 
-1. Schritte 1–3 oben wie gehabt (Quelle finden, nur Sprechertext, Kapitel setzen).
+1. Schritte 1–3 oben wie gehabt (Quelle finden, nur Sprechertext, Kapitel setzen). Den fertigen Text in eine Datei schreiben.
 2. Link per Bash erzeugen (Titel und Text als JSON, raw-deflate, base64url ohne `=`):
 
 ```bash
-python3 - <<'EOF'
+python3 - <<'PY'
 import json, zlib, base64
-titel = "Müller – Recruitingfilm (final)"
-text = open("skript.txt", encoding="utf-8").read()   # vorher mit dem fertigen Text schreiben
+titel = "Kunde – Film (Fassung)"
+text = open("skript.txt", encoding="utf-8").read()
 c = zlib.compressobj(9, zlib.DEFLATED, -15)
 raw = c.compress(json.dumps({"t": titel, "x": text}, ensure_ascii=False).encode()) + c.flush()
-print("https://maxmolkenthin.github.io/prompter/#i=" + base64.urlsafe_b64encode(raw).decode().rstrip("="))
-EOF
+print("https://maxmolkenthin.github.io/prompter/#s=" + base64.urlsafe_b64encode(raw).decode().rstrip("="))
+PY
 ```
 
-3. Rückmeldung: Link als Codeblock (damit er sich vollständig kopieren lässt), Kapitelliste, Wortzahl, Sprechzeit. Dazu diese Anleitung:
-   - **Auf dem iPad in der Home-Bildschirm-App:** Skript → „Import-Link einfügen“ → Link einfügen → „Als neues Skript übernehmen“.
-   - **Oder vom Handy:** Fernbedienung (mit dem iPad gekoppelt) → „Skript an den Prompter schicken“ → Link einfügen → senden.
-   - Den Link direkt in Safari zu öffnen, legt das Skript nur in Safari an, nicht in der Home-Bildschirm-App (iOS trennt die Speicher).
-4. Bei sehr langen Skripten (Link über ca. 8.000 Zeichen) zusätzlich den fertigen Text mit `#`-Kapiteln als Codeblock ausgeben. Der lässt sich genauso einfügen.
+3. **Den Link als antippbaren Markdown-Link ausgeben, nicht als Codeblock**, z. B. `[▶ Müller Recruitingfilm in den Prompter](https://…#s=…)`. Kopieren von langen Links auf dem Handy schneidet sie oft ab.
+4. Dazu kurz erklären:
+   - Link **auf dem Handy antippen**. Es öffnet „Skript empfangen“ und schickt das Skript automatisch an das zuletzt gekoppelte iPad. Beim ersten Mal einmal den 4-stelligen Code vom iPad eingeben.
+   - Auf dem iPad muss die Prompter-App offen und online sein. Das Skript wird dort sofort das aktive Skript. Gleicher Titel überschreibt die alte Fassung.
+   - Alternativ den Link direkt auf dem iPad öffnen → „Auf diesem Gerät im Prompter öffnen“ (landet im Safari-Speicher, nicht in einer Home-Bildschirm-App).
+5. Kapitelliste, Wortzahl und Sprechzeit (130 Wörter/Min) nennen.
 
 Steuerbefehle aus Claude gehen bei der GitHub-Version nicht. Dort steuern Handy oder Clicker.
 

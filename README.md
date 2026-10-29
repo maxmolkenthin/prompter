@@ -16,11 +16,14 @@ Fernbedienung: dieselbe Adresse auf dem Handy öffnen, „Fernbedienung“ wähl
 
 | Datei | Zweck |
 |---|---|
-| `index.html` (Repo-Wurzel) | gebaute App, wird von GitHub Pages ausgeliefert |
+| `index.html`, `peerjs.min.js`, `pako_inflate.min.js`, `sw.js` | gebaute App, wird von GitHub Pages ausgeliefert (für Safari 12 / iOS 12 übersetzt) |
 | `src/index.html` | Quelltext; dieselbe Datei läuft auch als claude.ai-Artifact |
-| `build.py`, `sw.template.js` | bauen die App: `python3 build.py` |
-| `peerjs.min.js` | PeerJS 1.5.4 (MIT) für die Direktverbindung |
-| `pako_inflate.min.js` | pako 2.1.0 (MIT/Zlib) zum Entpacken der Import-Links, auch auf älteren iPads |
-| `prompter-laden/SKILL.md` | Claude-Skill: Skript aus ClickUp/Drive holen, Kapitel setzen, laden |
+| `build.py`, `sw.template.js` | bauen die App: `python3 build.py` (braucht Node.js, holt esbuild per npx) |
+| `vendor/` | Originale der Bibliotheken: PeerJS 1.5.4 (MIT), pako_inflate 2.1.0 (MIT/Zlib) |
+| `prompter-laden/SKILL.md` | Claude-Skill: Skript aus ClickUp/Drive holen, Kapitel setzen, Ein-Tipp-Link erzeugen |
+
+## Skript aufs iPad bringen
+
+Claude erzeugt einen Link (`…/prompter/#s=…`). Den Link auf dem Handy antippen: Die Seite „Skript empfangen“ schickt das Skript automatisch an das zuletzt gekoppelte iPad. Beim ersten Mal einmal den 4-stelligen Code vom iPad eingeben.
 
 Skripte werden nur im Browser des jeweiligen Geräts gespeichert, nicht in diesem Repository.

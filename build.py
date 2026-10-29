@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 """Baut aus index.html (Quelle, auch für claude.ai) die eigenständige Web-App in standalone/.
 
-Aufruf: python3 build.py
-Erzeugt standalone/index.html, sw.js, manifest.webmanifest und die App-Symbole.
-peerjs.min.js (PeerJS 1.5.4, MIT) und pako_inflate.min.js (pako 2.1.0, MIT/Zlib) liegen fest daneben.
+Aufruf: python3 build.py   (braucht Node.js; esbuild wird bei Bedarf per npx geholt)
+Erzeugt index.html, sw.js, manifest.webmanifest, die App-Symbole und die Bibliotheken.
+
+Der App-Code und PeerJS werden mit esbuild auf Safari 12 heruntergebrochen, damit
+auch alte iPads (iOS 12) die App ausführen. Quellen der Bibliotheken in vendor/:
+PeerJS 1.5.4 (MIT) und pako_inflate 2.1.0 (MIT/Zlib).
 """
 import hashlib
 import json
+import os
+import re
+import shutil
+import subprocess
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -19,6 +26,25 @@ if (ROOT / "src" / "index.html").exists():
 else:
     SRC_PATH, OUT = ROOT / "index.html", ROOT / "standalone"
 SRC = SRC_PATH.read_text(encoding="utf-8")
+VENDOR = ROOT / "vendor"
+TARGET = "safari12"
+
+
+def esbuild(code: str) -> str:
+    """Übersetzt JavaScript für ältere Browser (Syntax, keine fehlenden Funktionen)."""
+    cmd = os.environ.get("ESBUILD")
+    cmd = [cmd] if cmd else ["npx", "--yes", "esbuild@0.21.5"]
+    out = subprocess.run(cmd + ["--loader=js", f"--target={TARGET}", "--log-level=warning"],
+                         input=code, capture_output=True, text=True, check=True)
+    return out.stdout
+
+
+def legacy_html(src: str) -> str:
+    """Ersetzt das große Inline-Skript der App durch seine Safari-12-Fassung."""
+    start = src.index("<script>\n(() => {")
+    end = src.index("</script>", start)
+    body = src[start + len("<script>"):end]
+    return src[:start] + "<script>\n" + esbuild(body) + src[end:]
 
 HEAD = """<!doctype html>
 <html lang="de">
@@ -79,7 +105,9 @@ def icon(size: int) -> Image.Image:
 
 def main() -> None:
     OUT.mkdir(exist_ok=True)
-    html = HEAD + SRC + FOOT
+    html = HEAD + legacy_html(SRC) + FOOT
+    (OUT / "peerjs.min.js").write_text(esbuild((VENDOR / "peerjs-1.5.4.min.js").read_text(encoding="utf-8")), encoding="utf-8")
+    shutil.copyfile(VENDOR / "pako_inflate-2.1.0.min.js", OUT / "pako_inflate.min.js")
     (OUT / "index.html").write_text(html, encoding="utf-8")
 
     icon(512).save(OUT / "icon-512.png")

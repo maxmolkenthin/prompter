@@ -1,6 +1,6 @@
 // Offline-Speicher für die eigenständige Version. Eigene Dateien: erst Netz, sonst Cache.
 // Schriften von Google: erst Cache, sonst Netz.
-const CACHE = 'colada-prompter-0e6f62341b';
+const CACHE = 'colada-prompter-4c9731229e';
 const ASSETS = ['./', './index.html', './peerjs.min.js', './pako_inflate.min.js','./manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

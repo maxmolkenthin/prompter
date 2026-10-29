@@ -39,7 +39,7 @@ img{max-width:100%}
 [hidden]{display:none!important}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 button,select,input,textarea{font:inherit;color:inherit}
 button{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 14px;min-height:44px;cursor:pointer;touch-action:manipulation;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
 button:hover{border-color:#414955}
@@ -63,7 +63,7 @@ h3{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--mute
 .status::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--muted)}
 .status[data-s=live]::before{background:var(--ok);box-shadow:0 0 0 3px rgba(60,203,140,.18)}
 .status[data-s=sync]::before{background:var(--warn)}
-.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-block:10px;border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-block:10px;border-bottom:1px solid var(--line);position:-webkit-sticky;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
 .bar .grow{flex:1 1 auto}
 
 /* Start */
@@ -112,20 +112,20 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
 .save{font-size:13px}
 
 /* Prompter */
-#v-prompter{position:fixed;inset:0;z-index:20;overflow:hidden;--pbg:#000;--pfg:#fff;--pcue:#ffc23d;--fs:64px;--mx:8%;--rl:30%;background:var(--pbg);color:var(--pfg)}
+#v-prompter{position:fixed;top:0;right:0;bottom:0;left:0;z-index:20;overflow:hidden;--pbg:#000;--pfg:#fff;--pcue:#ffc23d;--pfade1:rgba(0,0,0,.9);--pfade2:rgba(0,0,0,.4);--fs:64px;--mx:8%;--rl:30%;background:var(--pbg);color:var(--pfg)}
 #v-prompter[data-theme=yb]{--pfg:#ffe14a}
-#v-prompter[data-theme=bw]{--pbg:#fff;--pfg:#000;--pcue:#9a5200}
-#stage{position:absolute;inset:0;touch-action:none;user-select:none;-webkit-user-select:none}
+#v-prompter[data-theme=bw]{--pbg:#fff;--pfg:#000;--pcue:#9a5200;--pfade1:rgba(255,255,255,.9);--pfade2:rgba(255,255,255,.4)}
+#stage{position:absolute;top:0;right:0;bottom:0;left:0;touch-action:none;user-select:none;-webkit-user-select:none}
 #v-prompter:not(.ui) #stage{cursor:none}
-#flip{position:absolute;inset:0}
+#flip{position:absolute;top:0;right:0;bottom:0;left:0}
 #track{position:absolute;left:var(--mx);right:var(--mx);top:calc(var(--rl) - var(--fs) * .66);font-size:var(--fs);line-height:1.32;font-weight:700;will-change:transform;overflow-wrap:break-word}
 #track p{margin:0 0 .85em}
 .cue{display:flex;gap:.6em;align-items:baseline;font-size:.46em;line-height:1.25;color:var(--pcue);text-transform:uppercase;letter-spacing:.07em;border-top:3px solid currentColor;padding-top:.35em;margin:.4em 0 .9em}
 .cue-n{font-family:var(--f-mono)}
 .end{font-size:.46em;color:var(--pcue);text-align:center;letter-spacing:.1em;padding-bottom:100vh}
-.p-empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-size:24px;color:var(--muted);padding:24px}
-.fade{position:absolute;left:0;right:0;top:0;height:calc(var(--rl) - var(--fs) * .7);background:linear-gradient(to bottom,color-mix(in srgb,var(--pbg) 90%,transparent),color-mix(in srgb,var(--pbg) 40%,transparent));pointer-events:none;z-index:1}
-#readline{position:absolute;left:0;right:0;top:var(--rl);height:0;border-top:1px solid color-mix(in srgb,var(--tally) 30%,transparent);pointer-events:none;z-index:2}
+.p-empty{position:absolute;top:0;right:0;bottom:0;left:0;display:grid;place-items:center;text-align:center;font-size:24px;color:var(--muted);padding:24px}
+.fade{position:absolute;left:0;right:0;top:0;height:calc(var(--rl) - var(--fs) * .7);background:linear-gradient(to bottom,var(--pfade1),var(--pfade2));pointer-events:none;z-index:1}
+#readline{position:absolute;left:0;right:0;top:var(--rl);height:0;border-top:1px solid rgba(255,75,43,.3);pointer-events:none;z-index:2}
 #readline::before,#readline::after{content:"";position:absolute;top:-13px;border:13px solid transparent}
 #readline::before{left:0;border-left:20px solid var(--tally)}
 #readline::after{right:0;border-right:20px solid var(--tally)}
@@ -166,6 +166,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
 .auto{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .auto-state{font-size:14px;color:var(--muted)}
 .auto-state.err{color:#ff8f7a}
+#rcState.ok{color:#dcffee;background:#1d3a2d;border:1px solid var(--ok);border-radius:10px;padding:10px 12px;font-size:16px}
 .stepper{display:grid;grid-template-columns:56px 1fr 56px;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px}
 .stepper button{font-size:22px;padding:0}
 .stepper div{text-align:center;font-size:13px;color:var(--muted)}
@@ -175,6 +176,9 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
 
 @media (max-width:880px){.ed-grid{grid-template-columns:minmax(0,1fr)}#text{min-height:46vh}}
 @media (max-width:420px){.r-main button{min-height:76px}.bar .save{order:9;width:100%}}
+/* Ältere Safari (iOS 12–14.0) kennen kein gap bei Flexbox: Abstände per Rand nachbilden */
+.nogap .bar>*,.nogap .row>*,.nogap .ed-tools>*,.nogap .grp>*,.nogap .ctrl>*,.nogap .r-row>*,.nogap .pair>*,.nogap .auto>*,.nogap .tile-row>*{margin:4px}
+.nogap .status::before{margin-right:8px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -379,1004 +383,1581 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
   </div>
 </section>
 
+<section id="v-receive" class="view" hidden>
+  <header class="bar gut">
+    <button class="ghost" data-go="home">← Start</button>
+  </header>
+  <div class="r-wrap gut">
+    <div class="r-now">
+      <h3>Skript empfangen</h3>
+      <div id="rcTitle" class="r-title">–</div>
+      <div id="rcMeta" class="muted mono"></div>
+    </div>
+    <div class="card">
+      <h3><label for="rcCode">An das iPad im Teleprompter senden</label></h3>
+      <div class="pair">
+        <input id="rcCode" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="1234">
+        <button id="rcSend" class="primary">Senden</button>
+      </div>
+      <p id="rcState" class="empty-note" role="status"></p>
+    </div>
+    <button id="rcLocal">Auf diesem Gerät im Prompter öffnen</button>
+  </div>
+</section>
+
 </div>
 
 <script>
 (() => {
-'use strict';
-const $ = s => document.querySelector(s);
-const $$ = s => [...document.querySelectorAll(s)];
-const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const LS = {
-  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
-};
-const ICON_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
-const ICON_PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
-const WPM = 130;
-
-const DEF = { size: 64, speed: 6, margin: 8, line: 30, mirrorH: false, mirrorV: false, theme: 'wb' };
-const LIM = { size: [24, 200], speed: [1, 30], margin: [0, 30], line: [10, 60] };
-const S = {
-  set: Object.assign({}, DEF, LS.get('tp.settings', {})),
-  scripts: new Map(),
-  activeId: LS.get('tp.active', null),
-  pos: 0, target: null, playing: false, view: 'home'
-};
-
-let db = null, room = null, bc = null, booted = false;
-// Eigenständige Version (GitHub): kein window.claude, dafür PeerJS für die Direktverbindung.
-const STANDALONE = !(window.claude && typeof window.claude.use === 'function');
-const P2P = { on: STANDALONE && typeof window.Peer === 'function', peer: null, code: null, status: '', idTries: 0,
-  conns: new Set(), target: LS.get('tp.target', ''), rconn: null, rstatus: '', state: null, stateAt: 0, sentKey: '' };
-try { bc = new BroadcastChannel('colada-prompter'); } catch {}
-
-/* ---------- Skripte: Speicher ---------- */
-const sorted = () => [...S.scripts.values()].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-const activeScript = () => S.scripts.get(S.activeId) || null;
-
-function loadLocal() {
-  S.scripts.clear();
-  const o = LS.get('tp.scripts', {});
-  for (const id in o) S.scripts.set(id, o[id]);
-}
-function saveLocal() {
-  const o = {};
-  S.scripts.forEach((v, k) => { o[k] = v; });
-  LS.set('tp.scripts', o);
-  if (bc) bc.postMessage({ type: 'scripts' });
-}
-
-let saveTimer = 0, saveQ = Promise.resolve(), dirty = false;
-function setSaveState(t) { $('#saveState').textContent = t; }
-function scheduleSave() {
-  dirty = true; setSaveState('Ungespeichert');
-  clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 700);
-}
-function saveNow() {
-  clearTimeout(saveTimer);
-  const sc = activeScript();
-  if (!sc || !dirty) return;
-  sc.title = $('#title').value.trim() || 'Ohne Titel';
-  sc.text = $('#text').value;
-  sc.updatedAt = Date.now();
-  dirty = false;
-  const body = { title: sc.title, text: sc.text, updatedAt: sc.updatedAt };
-  if (db) {
-    setSaveState('Speichert …');
-    saveQ = saveQ.then(() => db.doc('scripts/' + sc.id).set(body))
-      .then(() => { if (!dirty) setSaveState('Gespeichert'); })
-      .catch(e => setSaveState(e && e.code === 'quota_exceeded' ? 'Speicher voll' : 'Speichern fehlgeschlagen'));
-  } else { saveLocal(); setSaveState('Auf diesem Gerät gespeichert'); }
-  renderScriptSelects();
-}
-function writeScript(sc) {
-  const body = { title: sc.title, text: sc.text, updatedAt: sc.updatedAt };
-  if (db) saveQ = saveQ.then(() => db.doc('scripts/' + sc.id).set(body)).catch(() => setSaveState('Speichern fehlgeschlagen'));
-  else saveLocal();
-}
-function newScript(text) {
-  if (dirty) saveNow();
-  const id = 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  const sc = { id, title: 'Neues Skript', text: text || '', updatedAt: Date.now() };
-  S.scripts.set(id, sc);
-  writeScript(sc);
-  setActive(id, true);
-  return sc;
-}
-let delArm = 0;
-function deleteActive() {
-  const b = $('#btnDel'), sc = activeScript();
-  if (!sc) return;
-  if (!delArm) {
-    b.textContent = 'Wirklich löschen?';
-    delArm = setTimeout(() => { delArm = 0; b.textContent = 'Löschen'; }, 3000);
-    return;
-  }
-  clearTimeout(delArm); delArm = 0; b.textContent = 'Löschen';
-  dirty = false; clearTimeout(saveTimer);
-  S.scripts.delete(sc.id);
-  if (db) saveQ = saveQ.then(() => db.doc('scripts/' + sc.id).delete()).catch(() => {});
-  else saveLocal();
-  const next = sorted()[0];
-  setActive(next ? next.id : null, true);
-}
-function setActive(id, broadcast) {
-  if (dirty) saveNow();
-  S.activeId = id; LS.set('tp.active', id);
-  if (broadcast) {
-    if (db && id) db.doc('live/state').set({ scriptId: id, updatedAt: Date.now() }).catch(() => {});
-    else if (bc) bc.postMessage({ type: 'active', id });
-  }
-  onActiveChanged();
-}
-function onActiveChanged() {
-  renderEditor(true);
-  if (S.view === 'prompter') { setPlay(false); S.pos = 0; S.target = null; buildTrack(); }
-  renderRemote(); pushPresence();
-}
-function onScriptsChanged() {
-  if (!S.scripts.has(S.activeId)) { const f = sorted()[0]; S.activeId = f ? f.id : null; }
-  renderEditor(false);
-  if (S.view === 'prompter') { const sc = activeScript(); if (keyOf(sc) !== builtFor) rebuildKeepPos(); }
-  renderRemote(); pushPresence();
-}
-
-/* ---------- Text zerlegen ---------- */
-function parse(text) {
-  const out = []; let para = [];
-  const flush = () => { if (para.length) { out.push({ t: 'p', lines: para }); para = []; } };
-  for (const raw of String(text || '').replace(/\r\n?/g, '\n').split('\n')) {
-    const m = raw.match(/^\s*#{1,6}\s*(.*)$/);
-    if (m) { flush(); out.push({ t: 'h', title: m[1].trim() || 'Kapitel' }); }
-    else if (!raw.trim()) flush();
-    else para.push(raw.trim());
-  }
-  flush();
-  return out;
-}
-const chaptersOf = text => parse(text).filter(b => b.t === 'h').map(b => b.title);
-function wordCount(text) {
-  return String(text || '').split('\n').filter(l => !/^\s*#/.test(l)).join(' ').split(/\s+/).filter(Boolean).length;
-}
-function fmt(sec) {
-  sec = Math.max(0, Math.round(sec || 0));
-  return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
-}
-
-/* ---------- Einstellungen ---------- */
-function setSetting(k, v) {
-  if (LIM[k]) v = clamp(Math.round(+v) || DEF[k], LIM[k][0], LIM[k][1]);
-  if (k === 'theme' && !['wb', 'yb', 'bw'].includes(v)) return;
-  if (k === 'mirrorH' || k === 'mirrorV') v = !!v;
-  const relayout = (k === 'size' || k === 'margin') && S.view === 'prompter';
-  const max0 = maxPos();
-  const ratio = relayout && max0 ? (S.target ?? S.pos) / max0 : null;
-  S.set[k] = v;
-  LS.set('tp.settings', S.set);
-  applySettings();
-  if (ratio != null) { S.target = null; S.pos = ratio * maxPos(); }
-  pushPresence(true);
-}
-function applySettings() {
-  const p = $('#v-prompter'), s = S.set;
-  p.style.setProperty('--fs', s.size + 'px');
-  p.style.setProperty('--mx', s.margin + '%');
-  p.style.setProperty('--rl', s.line + '%');
-  p.dataset.theme = s.theme;
-  $('#flip').style.transform = `scale(${s.mirrorH ? -1 : 1},${s.mirrorV ? -1 : 1})`;
-  $('#setSize').value = s.size; $('#oSize').textContent = s.size + ' px';
-  $('#setSpeed').value = s.speed; $('#oSpeed').textContent = s.speed;
-  $('#setMargin').value = s.margin; $('#oMargin').textContent = s.margin + ' %';
-  $('#setLine').value = s.line; $('#oLine').textContent = s.line + ' %';
-  $('#pSpeed').textContent = s.speed; $('#pSize').textContent = s.size;
-  for (const id of ['#edMH', '#pMH']) $(id).setAttribute('aria-pressed', s.mirrorH);
-  for (const id of ['#edMV', '#pMV']) $(id).setAttribute('aria-pressed', s.mirrorV);
-  $$('[data-theme]').forEach(b => b.setAttribute('aria-pressed', b.dataset.theme === s.theme));
-}
-
-/* ---------- Skript-Editor ---------- */
-function renderScriptSelects() {
-  const list = sorted();
-  for (const sel of P2P.on ? [$('#scriptSel')] : [$('#scriptSel'), $('#rScript')]) {
-    sel.textContent = '';
-    if (!list.length) { const o = new Option('Noch kein Skript', ''); sel.add(o); sel.disabled = true; continue; }
-    sel.disabled = false;
-    for (const sc of list) sel.add(new Option(sc.title || 'Ohne Titel', sc.id));
-    sel.value = S.activeId || '';
-  }
-}
-function renderEditor(force) {
-  renderScriptSelects();
-  const sc = activeScript(), ta = $('#text'), ti = $('#title');
-  const editing = document.activeElement === ta || document.activeElement === ti;
-  if (force || (!dirty && !editing)) { ta.value = sc ? sc.text : ''; ti.value = sc ? sc.title : ''; }
-  $('#btnDel').disabled = !sc;
-  if (!dirty) setSaveState(sc ? (db ? 'Gespeichert' : 'Auf diesem Gerät gespeichert') : '');
-  renderChapterList();
-  renderStats();
-}
-function renderStats() {
-  const w = wordCount($('#text').value);
-  $('#stWords').textContent = w + ' Wörter';
-  $('#stDur').textContent = 'ca. ' + fmt(w / WPM * 60) + ' Min Sprechzeit bei ' + WPM + ' Wörtern/Min';
-}
-function renderChapterList() {
-  const ol = $('#chList'); ol.textContent = '';
-  const lines = $('#text').value.split('\n');
-  const ta = $('#text');
-  const curLine = ta.value.slice(0, ta.selectionStart).split('\n').length - 1;
-  let n = 0, onIdx = -1;
-  lines.forEach((l, i) => { if (/^\s*#/.test(l) && i <= curLine) onIdx = n; if (/^\s*#/.test(l)) n++; });
-  n = 0;
-  lines.forEach((l, i) => {
-    const m = l.match(/^\s*#{1,6}\s*(.*)$/);
-    if (!m) return;
-    const li = document.createElement('li');
-    if (n === onIdx) li.className = 'on';
-    const b = document.createElement('button');
-    b.textContent = m[1].trim() || 'Kapitel';
-    b.addEventListener('click', () => jumpEditorToLine(i));
-    li.append(b); ol.append(li); n++;
-  });
-  $('#chEmpty').hidden = n > 0;
-}
-function jumpEditorToLine(i) {
-  const ta = $('#text'), lines = ta.value.split('\n');
-  let off = 0; for (let k = 0; k < i; k++) off += lines[k].length + 1;
-  ta.focus();
-  ta.setSelectionRange(off, off + lines[i].length);
-  const lh = parseFloat(getComputedStyle(ta).lineHeight) || 28;
-  ta.scrollTop = Math.max(0, i * lh - ta.clientHeight / 3);
-  renderChapterList();
-}
-function insertMark() {
-  const ta = $('#text');
-  if (!activeScript()) newScript('');
-  const v = ta.value, pos = ta.selectionStart;
-  const start = v.lastIndexOf('\n', pos - 1) + 1;
-  const n = chaptersOf(v.slice(0, start)).length + 1;
-  const name = 'Kapitel ' + n;
-  const lineEmpty = !v.slice(start, v.indexOf('\n', start) === -1 ? v.length : v.indexOf('\n', start)).trim();
-  const ins = '# ' + name + (lineEmpty ? '' : '\n');
-  ta.focus();
-  ta.setRangeText(ins, start, start, 'end');
-  ta.setSelectionRange(start + 2, start + 2 + name.length);
-  scheduleSave(); renderChapterList(); renderStats();
-}
-
-/* Kapitel automatisch: Claude bekommt den Text in nummerierten Einheiten und nennt nur,
-   wo ein Kapitel beginnt. Die Seite setzt die #-Zeilen selbst, der Wortlaut bleibt unangetastet. */
-let sample = null, undoText = null, autoBusy = false;
-function splitUnits(text) {
-  const src = String(text).replace(/\r\n?/g, '\n').split('\n').filter(l => !/^\s*#/.test(l));
-  const units = [];
-  const perLine = src.map(l => {
-    if (!l.trim()) return [];
-    const parts = l.length > 300 ? (l.trim().match(/[^.!?…]+[.!?…]+["“”»«'’)]*\s*|[^.!?…]+$/g) || [l.trim()]) : [l.trim()];
-    return parts.map(p => p.trim()).filter(Boolean).map(p => { units.push(p); return units.length - 1; });
-  });
-  return { src, units, perLine };
-}
-function rebuildWithMarks(sp, marks) {
-  const out = [];
-  sp.src.forEach((l, li) => {
-    const ids = sp.perLine[li];
-    if (!ids.length) { out.push(''); return; }
-    let cur = [];
-    for (const u of ids) {
-      if (marks.has(u)) {
-        if (cur.length) { out.push(cur.join(' ')); cur = []; }
-        if (out.length && out[out.length - 1].trim()) out.push('');
-        out.push('# ' + marks.get(u));
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => [...document.querySelectorAll(s)];
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const LS = {
+    get(k, d) {
+      try {
+        const v = localStorage.getItem(k);
+        return v == null ? d : JSON.parse(v);
+      } catch {
+        return d;
       }
-      cur.push(sp.units[u]);
+    },
+    set(k, v) {
+      try {
+        localStorage.setItem(k, JSON.stringify(v));
+      } catch {
+      }
     }
-    out.push(cur.join(' '));
-  });
-  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
-}
-function autoState(t, err) { const el = $('#autoState'); el.textContent = t; el.classList.toggle('err', !!err); }
-async function autoChapters() {
-  if (autoBusy || !sample) return;
-  const ta = $('#text'), text = ta.value;
-  const sp = splitUnits(text);
-  if (sp.units.length < 2) { autoState('Zu wenig Text zum Aufteilen.', true); return; }
-  autoBusy = true; $('#btnAuto').disabled = true; autoState('Claude liest den Text …');
-  const listing = sp.units.map((u, i) => '[' + (i + 1) + '] ' + u).join('\n');
-  const prompt = 'Du bereitest ein gesprochenes Skript für einen Teleprompter vor (Imagefilm, Recruitingfilm, Interview, Moderation). ' +
-    'Teile es in sinnvolle Kapitel: thematische Abschnitte, an denen man beim Dreh neu ansetzen würde. ' +
-    'Faustregel: ein Kapitel pro 60 bis 150 Wörter, mindestens 2, höchstens 15. Das erste Kapitel beginnt bei Einheit 1. ' +
-    'Kapitelnamen: Deutsch, 1 bis 4 Wörter, beschreibend (zum Beispiel "Intro", "Arbeitsalltag", "Call to Action").\n\n' +
-    'Antworte NUR mit JSON in dieser Form: {"title": "kurzer Titel für das Skript", "chapters": [{"start": 1, "name": "Intro"}]}\n' +
-    '"start" ist die Nummer der Einheit, mit der das Kapitel beginnt.\n\nText in nummerierten Einheiten:\n' + listing;
+  };
+  (function() {
+    const f = document.createElement("div");
+    f.style.cssText = "display:flex;flex-direction:column;row-gap:1px;position:absolute;visibility:hidden";
+    f.appendChild(document.createElement("div"));
+    f.appendChild(document.createElement("div"));
+    document.body.appendChild(f);
+    if (f.scrollHeight !== 1) document.documentElement.classList.add("nogap");
+    f.remove();
+  })();
+  const ICON_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+  const ICON_PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+  const WPM = 130;
+  const DEF = { size: 64, speed: 6, margin: 8, line: 30, mirrorH: false, mirrorV: false, theme: "wb" };
+  const LIM = { size: [24, 200], speed: [1, 30], margin: [0, 30], line: [10, 60] };
+  const S = {
+    set: Object.assign({}, DEF, LS.get("tp.settings", {})),
+    scripts: /* @__PURE__ */ new Map(),
+    activeId: LS.get("tp.active", null),
+    pos: 0,
+    target: null,
+    playing: false,
+    view: "home"
+  };
+  let db = null, room = null, bc = null, booted = false;
+  const STANDALONE = !(window.claude && typeof window.claude.use === "function");
+  const P2P = {
+    on: STANDALONE && typeof window.Peer === "function",
+    peer: null,
+    code: null,
+    status: "",
+    idTries: 0,
+    conns: /* @__PURE__ */ new Set(),
+    target: LS.get("tp.target", ""),
+    rconn: null,
+    rstatus: "",
+    state: null,
+    stateAt: 0,
+    sentKey: ""
+  };
   try {
-    const res = await sample.json(prompt, { modelTier: 'default' });
-    const chs = res && Array.isArray(res.chapters) ? res.chapters : [];
-    const marks = new Map();
-    for (const c of chs) {
-      const i = (Number(c && c.start) | 0) - 1;
-      const name = String((c && c.name) || '').replace(/^#+\s*/, '').replace(/\s+/g, ' ').trim().slice(0, 60);
-      if (i >= 0 && i < sp.units.length && name && !marks.has(i)) marks.set(i, name);
-    }
-    if (!marks.size) throw { code: 'empty' };
-    if (ta.value !== text) { autoState('Text wurde zwischendurch geändert. Bitte nochmal starten.', true); return; }
-    undoText = text;
-    if (!activeScript()) newScript('');
-    ta.value = rebuildWithMarks(sp, new Map([...marks].sort((a, b) => a[0] - b[0])));
-    const ti = $('#title');
-    if (res.title && (!ti.value.trim() || ti.value === 'Neues Skript')) ti.value = String(res.title).slice(0, 80);
-    scheduleSave(); renderChapterList(); renderStats();
-    $('#btnUndo').hidden = false;
-    autoState(marks.size + ' Kapitel gesetzt. Wortlaut unverändert.');
-  } catch (e) {
-    const code = e && e.code;
-    autoState(code === 'not_granted' ? 'Claude-Zugriff wurde nicht erlaubt.'
-      : code === 'rate_limited' ? 'Gerade zu viele Anfragen. In einer Minute nochmal.'
-      : code === 'cancelled' ? 'Abgebrochen.'
-      : 'Hat nicht geklappt. Bitte nochmal versuchen.', true);
-  } finally { autoBusy = false; $('#btnAuto').disabled = false; }
-}
-function undoAuto() {
-  if (undoText == null) return;
-  $('#text').value = undoText; undoText = null; $('#btnUndo').hidden = true;
-  scheduleSave(); renderChapterList(); renderStats(); autoState('Rückgängig gemacht.');
-}
-
-/* ---------- Prompter ---------- */
-const track = $('#track');
-let chapterEls = [], endEl = null, builtFor = null;
-const keyOf = sc => sc ? sc.id + '|' + sc.text : '';
-function buildTrack() {
-  const sc = activeScript();
-  track.textContent = ''; chapterEls = []; endEl = null;
-  builtFor = keyOf(sc);
-  const has = !!(sc && sc.text.trim());
-  $('#pEmpty').hidden = has;
-  if (!has) return;
-  let n = 0;
-  for (const b of parse(sc.text)) {
-    if (b.t === 'h') {
-      const d = document.createElement('div'); d.className = 'cue';
-      const k = document.createElement('span'); k.className = 'cue-n'; k.textContent = String(++n).padStart(2, '0');
-      const t = document.createElement('span'); t.textContent = b.title;
-      d.append(k, t); track.append(d); chapterEls.push(d);
+    bc = new BroadcastChannel("colada-prompter");
+  } catch {
+  }
+  const sorted = () => [...S.scripts.values()].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const activeScript = () => S.scripts.get(S.activeId) || null;
+  function loadLocal() {
+    S.scripts.clear();
+    const o = LS.get("tp.scripts", {});
+    for (const id in o) S.scripts.set(id, o[id]);
+  }
+  function saveLocal() {
+    const o = {};
+    S.scripts.forEach((v, k) => {
+      o[k] = v;
+    });
+    LS.set("tp.scripts", o);
+    if (bc) bc.postMessage({ type: "scripts" });
+  }
+  let saveTimer = 0, saveQ = Promise.resolve(), dirty = false;
+  function setSaveState(t) {
+    $("#saveState").textContent = t;
+  }
+  function scheduleSave() {
+    dirty = true;
+    setSaveState("Ungespeichert");
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 700);
+  }
+  function saveNow() {
+    clearTimeout(saveTimer);
+    const sc = activeScript();
+    if (!sc || !dirty) return;
+    sc.title = $("#title").value.trim() || "Ohne Titel";
+    sc.text = $("#text").value;
+    sc.updatedAt = Date.now();
+    dirty = false;
+    const body = { title: sc.title, text: sc.text, updatedAt: sc.updatedAt };
+    if (db) {
+      setSaveState("Speichert \u2026");
+      saveQ = saveQ.then(() => db.doc("scripts/" + sc.id).set(body)).then(() => {
+        if (!dirty) setSaveState("Gespeichert");
+      }).catch((e) => setSaveState(e && e.code === "quota_exceeded" ? "Speicher voll" : "Speichern fehlgeschlagen"));
     } else {
-      const p = document.createElement('p');
-      b.lines.forEach((l, i) => { if (i) p.append(document.createElement('br')); p.append(l); });
-      track.append(p);
+      saveLocal();
+      setSaveState("Auf diesem Ger\xE4t gespeichert");
     }
+    renderScriptSelects();
   }
-  endEl = document.createElement('div'); endEl.className = 'end'; endEl.textContent = 'ENDE';
-  track.append(endEl);
-}
-function rebuildKeepPos() {
-  const m = maxPos(), r = m ? S.pos / m : 0;
-  buildTrack(); S.target = null; S.pos = r * maxPos();
-}
-const maxPos = () => endEl ? endEl.offsetTop : 0;
-const pxPerSec = () => S.set.speed * S.set.size * 0.08;
-const chStarts = () => chapterEls.map(e => e.offsetTop);
-const ref = () => S.target ?? S.pos;
-// Toleranz: die Kapitelzeile hat etwas Abstand nach oben, Position 0 zählt schon als Kapitel 1.
-const tol = () => S.set.size * 0.8;
-function curChapter() { let i = -1; chStarts().forEach((y, k) => { if (y <= S.pos + tol()) i = k; }); return i; }
-function goTo(y) { S.target = clamp(y, 0, maxPos()); }
-function nextCh() { const y = chStarts().find(y => y > ref() + tol()); goTo(y ?? maxPos()); }
-function prevCh() { const b = chStarts().filter(y => y < ref() - 40); goTo(b.length ? b[b.length - 1] : 0); }
-function nudge(d) { goTo(ref() + d * S.set.size * 1.32 * 2); }
-
-function setPlay(on) {
-  if (on && S.pos >= maxPos() - 1 && maxPos() > 0) { S.pos = 0; S.target = null; }
-  S.playing = !!on && maxPos() > 0;
-  const p = $('#v-prompter');
-  p.classList.toggle('playing', S.playing);
-  $('#pPlay').innerHTML = S.playing ? ICON_PAUSE : ICON_PLAY;
-  showUi();
-  pushPresence(true);
-}
-let hideT = 0;
-function showUi() {
-  const p = $('#v-prompter');
-  p.classList.add('ui'); clearTimeout(hideT);
-  if (S.playing) hideT = setTimeout(() => p.classList.remove('ui'), 2200);
-}
-let toastT = 0;
-function toast(t) {
-  const el = $('#toast'); el.textContent = t; el.classList.add('on');
-  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1300);
-}
-
-const CMDS = {
-  play: () => setPlay(true), pause: () => setPlay(false), toggle: () => setPlay(!S.playing),
-  stop: () => { setPlay(false); goTo(0); },
-  next: nextCh, prev: prevCh, top: () => goTo(0), back: () => nudge(-1), fwd: () => nudge(1),
-  chapter: v => { const y = chStarts()[v | 0]; if (y != null) goTo(y); },
-  speed: v => setSetting('speed', v), size: v => setSetting('size', v), margin: v => setSetting('margin', v),
-  faster: () => setSetting('speed', S.set.speed + 1), slower: () => setSetting('speed', S.set.speed - 1),
-  bigger: () => setSetting('size', S.set.size + 4), smaller: () => setSetting('size', S.set.size - 4),
-  mirrorH: v => setSetting('mirrorH', typeof v === 'boolean' ? v : !S.set.mirrorH),
-  mirrorV: v => setSetting('mirrorV', typeof v === 'boolean' ? v : !S.set.mirrorV),
-  theme: v => setSetting('theme', v)
-};
-const LABEL = { play: 'Start', pause: 'Pause', stop: 'Stopp', toggle: '', next: 'Nächstes Kapitel', prev: 'Kapitel zurück', top: 'Anfang',
-  chapter: 'Kapitelsprung', speed: 'Tempo', size: 'Schrift', faster: 'Schneller', slower: 'Langsamer',
-  bigger: 'Schrift größer', smaller: 'Schrift kleiner', mirrorH: 'Spiegelung', mirrorV: 'Spiegelung', back: '', fwd: '' };
-function exec(cmd, v, src) {
-  if (S.view !== 'prompter') return;
-  if (!Object.prototype.hasOwnProperty.call(CMDS, cmd)) return;
-  if (typeof v === 'number' && !isFinite(v)) return;
-  CMDS[cmd](v);
-  if (src && LABEL[cmd]) toast((src === 'claude' ? 'Claude: ' : 'Fernbedienung: ') + LABEL[cmd]);
-}
-
-let raf = 0, lastT = 0, dragging = null, hudT = 0;
-function loop(t) {
-  raf = requestAnimationFrame(loop);
-  const dt = lastT ? Math.min(0.1, (t - lastT) / 1000) : 0; lastT = t;
-  const max = maxPos();
-  if (S.target != null) {
-    const d = S.target - S.pos;
-    S.pos += d * Math.min(1, dt * 9);
-    if (Math.abs(d) < 0.6) { S.pos = S.target; S.target = null; }
-  } else if (S.playing && !dragging) {
-    S.pos += pxPerSec() * dt;
-    if (S.pos >= max) { S.pos = max; setPlay(false); }
+  function writeScript(sc) {
+    const body = { title: sc.title, text: sc.text, updatedAt: sc.updatedAt };
+    if (db) saveQ = saveQ.then(() => db.doc("scripts/" + sc.id).set(body)).catch(() => setSaveState("Speichern fehlgeschlagen"));
+    else saveLocal();
   }
-  S.pos = clamp(S.pos, 0, max);
-  track.style.transform = `translate3d(0,${(-S.pos).toFixed(2)}px,0)`;
-  if (t - hudT > 250) { hudT = t; renderHud(); pushPresence(false); }
-}
-function renderHud() {
-  const chs = chapterEls.map(e => e.lastChild.textContent), i = curChapter();
-  $('#pChapter').textContent = chs.length ? (i >= 0 ? `Kapitel ${i + 1}/${chs.length} · ${chs[i]}` : 'Vor Kapitel 1') : (activeScript()?.title || '');
-  const rem = (maxPos() - S.pos) / pxPerSec();
-  $('#pTime').textContent = 'noch ' + fmt(rem) + ' bei Tempo ' + S.set.speed;
-  const n = P2P.on ? P2P.conns.size : remotePeers().length;
-  const r = $('#pRemotes');
-  r.dataset.s = n ? 'live' : ((room && room.connected()) || P2P.status === 'ready' ? 'sync' : '');
-  r.textContent = n ? (n === 1 ? '1 Fernbedienung verbunden' : n + ' Fernbedienungen verbunden') : (room || P2P.status === 'ready' ? 'Keine Fernbedienung' : 'Fernbedienung nicht verfügbar');
-  $('#pCode').textContent = P2P.on && P2P.code ? 'Code ' + P2P.code : '';
-}
-
-/* Touch, Maus, Rad */
-const stage = $('#stage');
-stage.addEventListener('pointerdown', e => {
-  dragging = { y: e.clientY, pos: S.pos, moved: false };
-  try { stage.setPointerCapture(e.pointerId); } catch {}
-});
-stage.addEventListener('pointermove', e => {
-  if (e.pointerType === 'mouse' && !dragging) { showUi(); return; }
-  if (!dragging) return;
-  const dy = e.clientY - dragging.y;
-  if (Math.abs(dy) > 8) dragging.moved = true;
-  if (dragging.moved) { S.target = null; S.pos = clamp(dragging.pos + (S.set.mirrorV ? 1 : -1) * dy, 0, maxPos()); }
-});
-const endDrag = () => { if (dragging && !dragging.moved) setPlay(!S.playing); dragging = null; };
-stage.addEventListener('pointerup', endDrag);
-stage.addEventListener('pointercancel', () => { dragging = null; });
-stage.addEventListener('wheel', e => { e.preventDefault(); S.target = null; S.pos = clamp(S.pos + (S.set.mirrorV ? -1 : 1) * e.deltaY, 0, maxPos()); }, { passive: false });
-
-$('#ctrl').addEventListener('click', e => {
-  const b = e.target.closest('[data-c]'); if (!b) return;
-  const c = b.dataset.c;
-  if (c === 'close') go('editor');
-  else if (c === 'fs') toggleFs();
-  else CMDS[c]();
-  showUi();
-});
-
-document.addEventListener('keydown', e => {
-  if (S.view !== 'prompter' || e.metaKey || e.ctrlKey || e.altKey) return;
-  const k = e.key;
-  const map = {
-    ' ': 'toggle', Enter: 'toggle', b: 'toggle', B: 'toggle', '.': 'toggle', k: 'toggle', F5: 'toggle', Escape: 'pause',
-    ArrowRight: 'next', PageDown: 'next', ArrowLeft: 'prev', PageUp: 'prev',
-    ArrowUp: 'faster', ArrowDown: 'slower', '+': 'bigger', '=': 'bigger', '-': 'smaller',
-    Home: 'top', h: 'mirrorH', H: 'mirrorH', v: 'mirrorV', V: 'mirrorV'
-  };
-  if (k === 'f' || k === 'F') { toggleFs(); e.preventDefault(); return; }
-  const c = map[k]; if (!c) return;
-  e.preventDefault(); CMDS[c](); if (c !== 'toggle') showUi();
-});
-
-let wl = null;
-async function wake(on) {
-  try {
-    if (on && !wl && navigator.wakeLock) { wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => { wl = null; }); }
-    else if (!on && wl) { await wl.release(); wl = null; }
-  } catch { wl = null; }
-}
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && S.view === 'prompter') wake(true); });
-function fsEl() { return document.fullscreenElement || document.webkitFullscreenElement; }
-function toggleFs() {
-  const el = document.documentElement;
-  try {
-    if (fsEl()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
-    const req = el.requestFullscreen || el.webkitRequestFullscreen;
-    if (!req) { toast('Vollbild ist hier nicht verfügbar'); return; }
-    const r = req.call(el);
-    if (r && r.catch) r.catch(() => toast('Vollbild ist hier nicht verfügbar'));
-  } catch { toast('Vollbild ist hier nicht verfügbar'); }
-}
-
-/* ---------- Live-Verbindung ---------- */
-/* Der Prompter meldet seinen Stand zweifach: live über den Raum (sofort)
-   und über den Speicher in live/status (Rückfallweg, alle 3 s beim Abspielen). */
-let presKey = '';
-function prompterState() {
-  const sc = activeScript(), max = maxPos();
-  return {
-    t: (sc?.title || '').slice(0, 80), id: S.activeId || '', pl: S.playing, sp: S.set.speed, sz: S.set.size,
-    mh: S.set.mirrorH, mv: S.set.mirrorV, ch: curChapter(),
-    pr: max ? Math.round(S.pos / max * 1000) / 1000 : 0,
-    rem: Math.round((max - S.pos) / pxPerSec()),
-    chs: chapterEls.slice(0, 40).map(e => e.lastChild.textContent.slice(0, 48))
-  };
-}
-function pushPresence() {
-  const p = S.view === 'prompter' ? prompterState() : null;
-  if (p) syncStatus(p);
-  p2pBroadcast(p);
-  if (!room) return;
-  const obj = { role: S.view, p };
-  const key = JSON.stringify(obj);
-  if (key === presKey) return;
-  presKey = key;
-  room.presence(obj).catch(() => { presKey = ''; });
-}
-let stKey = '', stLast = 0, stTimer = 0, stQ = Promise.resolve(), stP = null;
-function syncStatus(p) {
-  if (!db) return;
-  stP = p;
-  const { pr, rem, ...core } = p;
-  const key = JSON.stringify(core);
-  if (key !== stKey) { stKey = key; clearTimeout(stTimer); stTimer = setTimeout(writeStatus, 250); }
-  else if (S.playing && Date.now() - stLast > 3000) writeStatus();
-}
-function writeStatus(clear) {
-  clearTimeout(stTimer); stLast = Date.now();
-  const body = { p: clear ? null : stP, at: Date.now() };
-  if (clear) stKey = '';
-  stQ = stQ.then(() => db.doc('live/status').set(body)).catch(() => {});
-}
-const livePeers = () => room ? room.peers().filter(p => !p.sameTab && p.presence) : [];
-const remotePeers = () => livePeers().filter(p => p.presence.role === 'remote');
-let dbStatus = null;
-function currentPrompter() {
-  if (P2P.on) return P2P.rconn && P2P.rconn.open && P2P.state && P2P.state.p && typeof P2P.state.p === 'object'
-    ? Object.assign({}, P2P.state.p, { src: 'p2p' }) : null;
-  const ps = livePeers().filter(p => p.presence.role === 'prompter' && p.presence.p && typeof p.presence.p === 'object');
-  if (ps.length) return Object.assign({}, ps.reduce((a, b) => (a.updatedAt >= b.updatedAt ? a : b)).presence.p, { src: 'live' });
-  if (dbStatus && dbStatus.p && typeof dbStatus.p === 'object' && Date.now() - dbStatus.at < 15 * 60 * 1000)
-    return Object.assign({}, dbStatus.p, { src: 'db', at: dbStatus.at });
-  return null;
-}
-
-/* Befehle über den Speicher: live/command hält die letzten Befehle als Warteschlange,
-   damit schnelle Tipps nicht verloren gehen. Claude schreibt in dasselbe Dokument. */
-let cmdQ = Promise.resolve(), sentQ = [], lastSent = 0;
-function sendDb(d) {
-  lastSent = Math.max(Date.now(), lastSent + 1);
-  sentQ.push({ seq: lastSent, cmd: d.cmd, value: d.value ?? null });
-  sentQ = sentQ.slice(-8);
-  const body = { seq: lastSent, cmd: d.cmd, value: d.value ?? null, from: 'remote', queue: sentQ.slice() };
-  cmdQ = cmdQ.then(() => db.doc('live/command').set(body)).catch(() => {});
-}
-function send(cmd, value) {
-  const d = value === undefined ? { cmd } : { cmd, value };
-  try { navigator.vibrate && navigator.vibrate(8); } catch {}
-  if (P2P.on) {
-    if (P2P.rconn && P2P.rconn.open) P2P.rconn.send({ type: 'cmd', ...d });
-    else { $('#rPairState').textContent = 'Nicht verbunden. Code eingeben und „Verbinden“ tippen.'; }
-    return;
+  function newScript(text) {
+    if (dirty) saveNow();
+    const id = "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const sc = { id, title: "Neues Skript", text: text || "", updatedAt: Date.now() };
+    S.scripts.set(id, sc);
+    writeScript(sc);
+    setActive(id, true);
+    return sc;
   }
-  if (room && room.connected()) room.emit('cmd', d).catch(() => { if (db) sendDb(d); });
-  else if (db) sendDb(d);
-  else if (bc) bc.postMessage({ type: 'cmd', ...d });
-}
-
-function connState() {
-  if (P2P.on) {
-    if (P2P.status === 'ready') return ['live', 'Bereit für die Fernbedienung'];
-    if (P2P.status === 'offline') return ['', 'Kein Internet: Fernbedienung per Handy gerade nicht möglich. Bluetooth-Clicker funktionieren.'];
-    return ['sync', 'Verbinde mit dem Kopplungsdienst …'];
-  }
-  if (STANDALONE) return ['', 'Fernbedienung per Handy nicht verfügbar. Bluetooth-Clicker funktionieren.'];
-  if (!booted) return ['', 'Verbinde …'];
-  if (room && room.connected()) return ['live', 'Live-Verbindung aktiv'];
-  if (room || db) return ['sync', db ? 'Cloud-Speicher aktiv, Live-Verbindung wird aufgebaut …' : 'Live-Verbindung wird aufgebaut …'];
-  return ['', 'Nur dieses Gerät: keine Fernbedienung möglich'];
-}
-function renderConn() {
-  const [s, t] = connState();
-  for (const id of ['#homeStatus', '#rStatus']) { const el = $(id); el.dataset.s = s; el.textContent = t; }
-}
-
-/* ---------- Fernbedienung ---------- */
-let rChKey = '';
-function renderRemote() {
-  renderConn();
-  if (S.view !== 'remote') return;
-  const p = currentPrompter(), sc = activeScript();
-  const chs = p && Array.isArray(p.chs) ? p.chs.map(String) : (sc ? chaptersOf(sc.text) : []);
-  const ci = p ? (Number(p.ch) | 0) : -1;
-  $('#rTitle').textContent = p ? (String(p.t || '') || 'Ohne Titel') : (sc?.title || 'Kein Skript');
-  $('#rChapter').textContent = p
-    ? (chs.length ? (ci >= 0 ? `Kapitel ${ci + 1} von ${chs.length}: ${chs[ci] || ''}` : 'Vor dem ersten Kapitel') : 'Keine Kapitelmarken')
-    : 'Kein Prompter verbunden. Öffne auf dem iPad „Prompter“.';
-  const pr = p ? clamp(Number(p.pr) || 0, 0, 1) : 0;
-  $('#rProg').style.width = (pr * 100).toFixed(1) + '%';
-  $('#rPct').textContent = p ? Math.round(pr * 100) + ' %' : '';
-  $('#rRemain').textContent = p ? 'noch ' + fmt(Number(p.rem)) : '';
-  const playing = !!(p && p.pl);
-  const rp = $('#rPlay');
-  rp.classList.toggle('playing', playing);
-  rp.innerHTML = (playing ? ICON_PAUSE : ICON_PLAY) + (playing ? 'Pause' : 'Start');
-  $('#rSpeed').textContent = p ? Number(p.sp) || '–' : '–';
-  $('#rSize').textContent = p ? Number(p.sz) || '–' : '–';
-  $('#rMH').setAttribute('aria-pressed', !!(p && p.mh));
-  $('#rMV').setAttribute('aria-pressed', !!(p && p.mv));
-  const src = $('#rSrc');
-  if (P2P.on) renderPair(p);
-  if (!p) { src.dataset.s = ''; src.textContent = P2P.on ? '' : 'Prompter-Stand unbekannt. Befehle werden trotzdem gesendet.'; }
-  else if (p.src === 'live' || p.src === 'p2p') { src.dataset.s = 'live'; src.textContent = p.src === 'p2p' ? 'Direkt mit dem iPad verbunden' : 'Prompter live verbunden'; }
-  else {
-    const age = Math.max(0, Math.round((Date.now() - p.at) / 1000));
-    src.dataset.s = 'sync';
-    src.textContent = 'Über Speicher verbunden · Stand vor ' + (age < 60 ? age + ' s' : fmt(age) + ' Min');
-  }
-  if (P2P.on) {
-    const list = P2P.rconn && P2P.rconn.open && P2P.state && Array.isArray(P2P.state.scripts) ? P2P.state.scripts : [];
-    $('#rScriptWrap').hidden = !list.length;
-    const key = JSON.stringify(list) + '|' + (P2P.state && P2P.state.active);
-    const sel = $('#rScript');
-    if (sel.dataset.key !== key) {
-      sel.dataset.key = key; sel.textContent = '';
-      for (const s of list) if (s && typeof s === 'object') sel.add(new Option(String(s.title || 'Ohne Titel'), String(s.id)));
-      sel.value = String(P2P.state && P2P.state.active || '');
+  let delArm = 0;
+  function deleteActive() {
+    const b = $("#btnDel"), sc = activeScript();
+    if (!sc) return;
+    if (!delArm) {
+      b.textContent = "Wirklich l\xF6schen?";
+      delArm = setTimeout(() => {
+        delArm = 0;
+        b.textContent = "L\xF6schen";
+      }, 3e3);
+      return;
     }
-  } else $('#rScriptWrap').hidden = !db || S.scripts.size === 0;
-  const key = chs.join('\u0001') + '|' + ci;
-  if (key !== rChKey) {
-    rChKey = key;
-    const ol = $('#rChapters'); ol.textContent = '';
-    chs.forEach((t, i) => {
-      const li = document.createElement('li'); if (i === ci) li.className = 'on';
-      const b = document.createElement('button'); b.textContent = t;
-      b.addEventListener('click', () => send('chapter', i));
-      li.append(b); ol.append(li);
+    clearTimeout(delArm);
+    delArm = 0;
+    b.textContent = "L\xF6schen";
+    dirty = false;
+    clearTimeout(saveTimer);
+    S.scripts.delete(sc.id);
+    if (db) saveQ = saveQ.then(() => db.doc("scripts/" + sc.id).delete()).catch(() => {
     });
-    $('#rChEmpty').hidden = chs.length > 0;
+    else saveLocal();
+    const next = sorted()[0];
+    setActive(next ? next.id : null, true);
   }
-}
-$('#v-remote').addEventListener('click', e => {
-  const b = e.target.closest('[data-r]'); if (!b) return;
-  // Nur relative Befehle: der Prompter entscheidet selbst, auch wenn sein Stand hier veraltet ist.
-  send(b.dataset.r);
-});
-setInterval(() => { if (S.view === 'remote') renderRemote(); }, 1000);
-$('#rScript').addEventListener('change', e => {
-  if (!e.target.value) return;
-  if (P2P.on) send('script', e.target.value); else setActive(e.target.value, true);
-});
-
-/* ---------- Direktverbindung (nur eigenständige Version) ----------
-   Jedes Gerät meldet sich beim PeerJS-Kopplungsdienst unter einem 4-stelligen Code an.
-   Die Fernbedienung verbindet sich mit dem Code des iPads; danach laufen Befehle und
-   Stand direkt zwischen den Geräten. */
-const PEER_PREFIX = 'colada-prompter-v1-';
-function p2pStart() {
-  if (!P2P.on || P2P.peer) return;
-  let code = LS.get('tp.code', null);
-  if (!/^\d{4}$/.test(code || '')) { code = String(1000 + Math.floor(Math.random() * 9000)); LS.set('tp.code', code); }
-  P2P.code = code; P2P.status = 'connecting';
-  // PROMPTER_PEER_OPTS: nur für Tests mit eigenem Kopplungsserver, sonst gilt der PeerJS-Standarddienst.
-  const peer = new window.Peer(PEER_PREFIX + code, Object.assign({ debug: 0 }, window.PROMPTER_PEER_OPTS || {}));
-  P2P.peer = peer;
-  peer.on('open', () => { P2P.status = 'ready'; P2P.idTries = 0; renderCode(); renderConn(); if (P2P.target && S.view === 'remote') p2pConnect(P2P.target); });
-  peer.on('connection', c => {
-    c.on('open', () => { P2P.conns.add(c); P2P.sentKey = ''; pushPresence(); if (S.view === 'prompter') renderHud(); });
-    c.on('data', d => onHostData(c, d));
-    c.on('close', () => { P2P.conns.delete(c); if (S.view === 'prompter') renderHud(); });
-    c.on('error', () => { P2P.conns.delete(c); });
-  });
-  peer.on('disconnected', () => {
-    if (P2P.peer !== peer) return;
-    P2P.status = 'connecting'; renderConn();
-    setTimeout(() => { try { if (!peer.destroyed) peer.reconnect(); } catch {} }, 2000);
-  });
-  peer.on('error', e => {
-    const t = e && e.type;
-    if (t === 'unavailable-id') {
-      // Nach einem Neuladen ist der alte Code oft noch ein paar Sekunden belegt: erst warten, dann neuen Code.
-      peer.destroy(); P2P.peer = null;
-      if (++P2P.idTries > 4) { LS.set('tp.code', null); P2P.idTries = 0; }
-      setTimeout(p2pStart, 3000);
-    } else if (t === 'peer-unavailable') {
-      P2P.rstatus = 'notfound'; renderRemote();
-    } else if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed' || t === 'browser-incompatible') {
-      P2P.status = 'offline'; renderConn();
-      if (t !== 'browser-incompatible') setTimeout(() => { try { if (!peer.destroyed) peer.reconnect(); } catch {} }, 5000);
+  function setActive(id, broadcast) {
+    if (dirty) saveNow();
+    S.activeId = id;
+    LS.set("tp.active", id);
+    if (broadcast) {
+      if (db && id) db.doc("live/state").set({ scriptId: id, updatedAt: Date.now() }).catch(() => {
+      });
+      else if (bc) bc.postMessage({ type: "active", id });
     }
-  });
-}
-function renderCode() {
-  const show = P2P.on && !!P2P.code;
-  $('#homeCode').hidden = !show;
-  $('#homeCodeVal').textContent = P2P.code || '····';
-}
-function p2pBroadcast(p) {
-  if (!P2P.on || !P2P.conns.size) return;
-  const msg = { type: 'state', p: p || null, active: S.activeId || '',
-    scripts: sorted().slice(0, 40).map(s => ({ id: s.id, title: String(s.title || '').slice(0, 80) })) };
-  const key = JSON.stringify(msg);
-  if (key === P2P.sentKey) return;
-  P2P.sentKey = key;
-  P2P.conns.forEach(c => { try { if (c.open) c.send(msg); } catch {} });
-}
-function onHostData(c, d) {
-  if (!d || typeof d !== 'object') return;
-  if (d.type === 'cmd' && typeof d.cmd === 'string') {
-    if (d.cmd === 'script') { const id = String(d.value || ''); if (S.scripts.has(id)) setActive(id, false); }
-    else exec(d.cmd, d.value, 'remote');
-  } else if (d.type === 'import') {
-    importAny(String(d.text || ''), String(d.title || '')).then(sc => {
-      try { c.send({ type: 'imported', ok: true, title: sc.title }); } catch {}
-      if (S.view === 'prompter') toast('Neues Skript: ' + sc.title);
-    }, e => { try { c.send({ type: 'imported', ok: false, reason: String((e && e.code) || '') }); } catch {} });
+    onActiveChanged();
   }
-}
-function p2pConnect(code) {
-  code = String(code || '').replace(/\D/g, '').slice(0, 4);
-  if (code.length !== 4) { P2P.rstatus = 'badcode'; renderRemote(); return; }
-  P2P.target = code; LS.set('tp.target', code);
-  if (code === P2P.code) { P2P.rstatus = 'self'; renderRemote(); return; }
-  if (P2P.rconn) { try { P2P.rconn.close(); } catch {} P2P.rconn = null; }
-  if (!P2P.peer || !P2P.peer.open) { P2P.rstatus = 'waiting'; renderRemote(); return; }
-  P2P.rstatus = 'connecting'; renderRemote();
-  const c = P2P.peer.connect(PEER_PREFIX + code, { reliable: true });
-  P2P.rconn = c;
-  c.on('open', () => { if (P2P.rconn === c) { P2P.rstatus = 'open'; renderRemote(); } });
-  c.on('data', d => {
-    if (P2P.rconn !== c || !d || typeof d !== 'object') return;
-    if (d.type === 'state') { P2P.state = d; P2P.stateAt = Date.now(); renderRemote(); }
-    if (d.type === 'imported') $('#rSendState').textContent = d.ok ? 'Auf dem iPad angelegt: ' + String(d.title || '')
-      : 'Das iPad konnte den Text nicht übernehmen. ' + (IMPORT_ERR[d.reason] || '');
-  });
-  c.on('close', () => { if (P2P.rconn === c) { P2P.rconn = null; P2P.state = null; P2P.rstatus = 'closed'; renderRemote(); } });
-  c.on('error', () => { if (P2P.rconn === c) { P2P.rstatus = 'closed'; renderRemote(); } });
-}
-// Fernbedienung hält die Verbindung: alle 4 s neu versuchen, solange sie offen ist und ein Code gespeichert ist.
-setInterval(() => {
-  if (!P2P.on || S.view !== 'remote' || !P2P.target || P2P.rstatus === 'self') return;
-  if ((P2P.rconn && (P2P.rconn.open || P2P.rstatus === 'connecting')) || !P2P.peer || !P2P.peer.open) return;
-  p2pConnect(P2P.target);
-}, 4000);
-function renderPair(p) {
-  const st = $('#rPairState'), r = P2P.rstatus;
-  const txt = {
-    open: 'Verbunden mit iPad ' + P2P.target + '.',
-    connecting: 'Verbinde mit ' + P2P.target + ' …',
-    waiting: 'Warte auf den Kopplungsdienst …',
-    notfound: 'iPad ' + P2P.target + ' nicht gefunden. Ist die App dort offen und online? Neuer Versuch läuft.',
-    closed: 'Verbindung getrennt. Neuer Versuch läuft …',
-    badcode: 'Bitte den 4-stelligen Code vom iPad eingeben.',
-    self: 'Das ist der Code dieses Geräts. Gib den Code vom iPad ein.'
-  }[r] || (P2P.status === 'offline' ? 'Kein Internet: Verbindung nicht möglich.' : 'Code vom iPad eingeben.');
-  st.textContent = r === 'open' && !p ? 'Verbunden mit iPad ' + P2P.target + '. Dort ist gerade nicht „Prompter“ geöffnet.' : txt;
-  const inp = $('#rCode');
-  if (document.activeElement !== inp && !inp.value) inp.value = P2P.target || '';
-}
-$('#rConnect').addEventListener('click', () => p2pConnect($('#rCode').value));
-$('#rCode').addEventListener('keydown', e => { if (e.key === 'Enter') p2pConnect($('#rCode').value); });
-$('#rSendBtn').addEventListener('click', async () => {
-  const st = $('#rSendState');
-  if (!$('#rSendText').value.trim()) { st.textContent = 'Erst Text oder Import-Link einfügen.'; return; }
-  if (!(P2P.rconn && P2P.rconn.open)) { st.textContent = 'Nicht mit dem iPad verbunden.'; return; }
-  // Das Handy entpackt den Link selbst und schickt fertigen Text: das iPad muss nichts dekodieren.
-  let d;
-  try { d = await resolveImport($('#rSendText').value, $('#rSendTitle').value.trim()); }
-  catch (e) { st.textContent = IMPORT_ERR[e && e.code] || 'Der Link konnte nicht gelesen werden.'; return; }
-  P2P.rconn.send({ type: 'import', text: d.text.slice(0, 200000), title: String(d.title || '').slice(0, 80) });
-  st.textContent = 'Gesendet: ' + (d.title || guessTitle(d.text)) + ' …';
-  $('#rSendText').value = ''; $('#rSendTitle').value = '';
-});
-
-/* ---------- Import: Link von Claude oder fertiger Text ----------
-   Link-Format: <App-Adresse>#i=<Base64url von raw-deflate(JSON {t: Titel, x: Text})> */
-function b64urlBytes(s) {
-  s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '=';
-  const bin = atob(s), out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
-}
-// Entpacken: pako (in der eigenständigen Version mitgeliefert, läuft auf jedem iPad),
-// sonst die eingebaute DecompressionStream (erst ab iOS 16.4).
-async function inflateRaw(bytes) {
-  if (window.pako && typeof window.pako.inflateRaw === 'function') return window.pako.inflateRaw(bytes, { to: 'string' });
-  if (typeof DecompressionStream !== 'function') throw { code: 'unsupported' };
-  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-  return new Response(stream).text();
-}
-async function decodeImport(code) {
-  let obj;
-  try { obj = JSON.parse(await inflateRaw(b64urlBytes(code))); }
-  catch (e) { throw { code: e && e.code === 'unsupported' ? 'unsupported' : 'incomplete' }; }
-  if (!obj || typeof obj !== 'object' || !String(obj.x || '').trim()) throw { code: 'incomplete' };
-  return { title: String(obj.t || ''), text: String(obj.x || '') };
-}
-// Erkennt einen Import-Link auch mit Leerzeichen oder Zeilenumbrüchen, wie sie beim Kopieren entstehen.
-function findImportCode(input) {
-  const flat = String(input || '').replace(/\s+/g, '');
-  const m = flat.match(/(?:^|[#&?])i=([A-Za-z0-9_-]{8,})$/);
-  return m ? m[1] : null;
-}
-const IMPORT_ERR = {
-  incomplete: 'Der Link ist unvollständig. Bitte den ganzen Link kopieren, er ist sehr lang.',
-  unsupported: 'Dieses Gerät kann den Link nicht lesen. Füge stattdessen den Skripttext ein.'
-};
-// Liefert {title, text} oder wirft {code}; der Link wird schon hier geprüft (auch auf dem Handy).
-async function resolveImport(input, title) {
-  input = String(input || '').trim();
-  if (!input) throw { code: 'empty' };
-  const code = findImportCode(input);
-  if (!code) return { title: title || '', text: input };
-  const d = await decodeImport(code);
-  return { title: title || d.title, text: d.text };
-}
-function guessTitle(text) {
-  const first = String(text).split('\n').map(l => l.replace(/^\s*#+\s*/, '').trim()).find(Boolean) || '';
-  return first.split(/\s+/).slice(0, 6).join(' ').slice(0, 60) || 'Importiertes Skript';
-}
-// Legt das Skript an; wirft {code} wie resolveImport.
-async function importAny(input, title) {
-  const { title: t, text: x } = await resolveImport(input, title);
-  const sc = newScript(x.slice(0, 200000));
-  sc.title = String(t || '').trim().slice(0, 80) || guessTitle(x);
-  sc.updatedAt = Date.now();
-  writeScript(sc);
-  renderEditor(true);
-  pushPresence();
-  return sc;
-}
-$('#btnImport').addEventListener('click', () => { $('#importBox').hidden = false; $('#importText').focus(); });
-$('#importCancel').addEventListener('click', () => { $('#importBox').hidden = true; $('#importText').value = ''; $('#importState').textContent = ''; });
-$('#importGo').addEventListener('click', async () => {
-  let sc;
-  try { sc = await importAny($('#importText').value, ''); }
-  catch (e) { $('#importState').textContent = IMPORT_ERR[e && e.code] || 'Erst einen Link oder Text einfügen.'; return; }
-  $('#importBox').hidden = true; $('#importText').value = ''; $('#importState').textContent = '';
-  setSaveState('Importiert: ' + sc.title);
-});
-
-/* ---------- Ansichten ---------- */
-const VIEWS = ['home', 'editor', 'prompter', 'remote'];
-function go(v) { const h = v === 'home' ? '' : v; if (location.hash.slice(1) === h) show(v); else location.hash = h; }
-function route() {
-  const h = location.hash.slice(1);
-  if (STANDALONE && h.startsWith('i=')) {
-    try { history.replaceState(null, '', location.pathname + location.search + '#editor'); } catch {}
-    show('editor');
-    importAny(h, '').then(sc => setSaveState('Importiert: ' + sc.title), () => setSaveState('Import-Link ungültig oder unvollständig'));
-    return;
-  }
-  show(VIEWS.includes(h) ? h : 'home');
-}
-function show(v) {
-  const prev = S.view;
-  if (prev === 'prompter' && v !== 'prompter') {
-    setPlay(false); cancelAnimationFrame(raf); raf = 0; wake(false);
-    if (db) writeStatus(true);
-    if (fsEl()) { try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch {} }
-  }
-  if (prev === 'editor' && dirty) saveNow();
-  S.view = v;
-  VIEWS.forEach(n => { $('#v-' + n).hidden = n !== v; });
-  if (v === 'editor') renderEditor(true);
-  if (v === 'prompter') {
-    applySettings();
-    if (keyOf(activeScript()) !== builtFor) { buildTrack(); S.pos = 0; } else S.pos = clamp(S.pos, 0, maxPos());
-    S.target = null; setPlay(false); lastT = 0;
-    if (!raf) raf = requestAnimationFrame(loop);
-    wake(true); renderHud();
-  }
-  if (v === 'remote') { rChKey = ''; renderRemote(); }
-  renderConn();
-  pushPresence(true);
-  window.scrollTo(0, 0);
-}
-window.addEventListener('hashchange', route);
-document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go); });
-
-/* Editor-Ereignisse */
-$('#text').addEventListener('input', () => {
-  if (!activeScript()) {
-    const t = $('#text').value, sc = newScript(t);
-    $('#text').value = t;
-    if (t.trim().length > 20) { sc.title = guessTitle(t); $('#title').value = sc.title; }
-  }
-  scheduleSave(); renderChapterList(); renderStats();
-});
-$('#text').addEventListener('keyup', renderChapterList);
-$('#text').addEventListener('click', renderChapterList);
-$('#title').addEventListener('input', () => { if (!activeScript()) newScript(''); scheduleSave(); });
-$('#title').addEventListener('change', saveNow);
-$('#text').addEventListener('blur', saveNow);
-$('#scriptSel').addEventListener('change', e => { if (e.target.value) setActive(e.target.value, true); });
-$('#btnNew').addEventListener('click', () => { newScript(''); $('#title').focus(); $('#title').select(); });
-$('#btnDel').addEventListener('click', deleteActive);
-$('#btnMark').addEventListener('click', insertMark);
-$('#btnAuto').addEventListener('click', autoChapters);
-$('#btnUndo').addEventListener('click', undoAuto);
-for (const [id, k] of [['#setSize', 'size'], ['#setSpeed', 'speed'], ['#setMargin', 'margin'], ['#setLine', 'line']])
-  $(id).addEventListener('input', e => setSetting(k, e.target.value));
-$('#edMH').addEventListener('click', () => setSetting('mirrorH', !S.set.mirrorH));
-$('#edMV').addEventListener('click', () => setSetting('mirrorV', !S.set.mirrorV));
-$$('.seg [data-theme]').forEach(b => b.addEventListener('click', () => setSetting('theme', b.dataset.theme)));
-window.addEventListener('resize', () => { if (S.view === 'prompter') rebuildKeepPos(); });
-
-/* Gleiches Gerät, anderer Tab (nur ohne Cloud) */
-if (bc) bc.onmessage = e => {
-  const d = e.data || {};
-  if (d.type === 'cmd' && !room && !db) exec(String(d.cmd), d.value, 'remote');
-  if (db) return;
-  if (d.type === 'scripts') { loadLocal(); onScriptsChanged(); }
-  if (d.type === 'active' && S.scripts.has(d.id)) { S.activeId = d.id; LS.set('tp.active', d.id); onActiveChanged(); }
-};
-
-/* ---------- Start ---------- */
-function connectDb() {
-  S.scripts.clear();
-  db.collection('scripts').onSnapshot(snap => {
-    snap.docChanges().forEach(ch => {
-      if (ch.type === 'removed') { S.scripts.delete(ch.doc.id); return; }
-      const d = ch.doc.data() || {};
-      S.scripts.set(ch.doc.id, { id: ch.doc.id, title: String(d.title || 'Ohne Titel'), text: String(d.text || ''), updatedAt: Number(d.updatedAt) || 0 });
-    });
-    onScriptsChanged();
-  }, e => console.warn('scripts', e));
-  db.doc('live/state').onSnapshot(s => {
-    const d = s.exists ? s.data() : null;
-    if (d && d.scriptId && String(d.scriptId) !== S.activeId) {
-      S.activeId = String(d.scriptId); LS.set('tp.active', S.activeId);
-      if (S.scripts.has(S.activeId)) onActiveChanged();
+  function onActiveChanged() {
+    renderEditor(true);
+    if (S.view === "prompter") {
+      setPlay(false);
+      S.pos = 0;
+      S.target = null;
+      buildTrack();
     }
-  }, e => console.warn('state', e));
-  let first = true, lastSeq = 0;
-  db.doc('live/command').onSnapshot(s => {
-    const d = s.exists ? s.data() : null;
-    if (!d) { first = false; return; }
-    const entries = (Array.isArray(d.queue) && d.queue.length ? d.queue : [d])
-      .filter(e => e && typeof e === 'object' && isFinite(Number(e.seq)))
-      .sort((a, b) => Number(a.seq) - Number(b.seq));
-    const top = entries.reduce((m, e) => Math.max(m, Number(e.seq)), 0);
-    if (first) { first = false; lastSeq = top; return; }
-    const src = d.from === 'remote' ? 'remote' : 'claude';
-    for (const e of entries) if (Number(e.seq) > lastSeq) exec(String(e.cmd || ''), e.value ?? undefined, src);
-    lastSeq = Math.max(lastSeq, top);
-  }, e => console.warn('command', e));
-  db.doc('live/status').onSnapshot(s => {
-    const d = s.exists ? s.data() : null;
-    dbStatus = d ? { p: d.p, at: Number(d.at) || 0 } : null;
     renderRemote();
-  }, e => console.warn('status', e));
-}
-function connectRoom() {
-  room.on('cmd', m => {
-    const d = m.data;
-    if (d && typeof d === 'object' && typeof d.cmd === 'string') exec(d.cmd, d.value, 'remote');
-  }, e => console.warn('room', e));
-  room.onPeers(() => { renderRemote(); if (S.view === 'prompter') renderHud(); });
-  room.onConnection(() => { presKey = ''; pushPresence(true); renderConn(); renderRemote(); });
-}
-async function boot() {
-  loadLocal();
-  if (!S.scripts.has(S.activeId)) { const f = sorted()[0]; S.activeId = f ? f.id : null; }
-  applySettings();
-  route();
-  const cl = window.claude;
-  if (cl && typeof cl.use === 'function') {
-    const [d, r, sm] = await Promise.all([cl.use('db').catch(() => null), cl.use('room').catch(() => null), cl.use('sample').catch(() => null)]);
-    db = d; room = r; sample = sm;
-    $('#autoWrap').hidden = !sample;
-    if (db) connectDb();
-    if (room) connectRoom();
+    pushPresence();
   }
-  if (STANDALONE) {
-    $('#btnImport').hidden = false;
-    $('#tileRemote').textContent = 'Handy oder zweites Tablet steuert den Prompter. Einmal mit dem Code vom iPad koppeln.';
-    $('#helpRemote').textContent = 'Auf dem Handy dieselbe Adresse öffnen, „Fernbedienung“ wählen und den 4-stelligen Code vom iPad eingeben. Beide Geräte brauchen dafür Internet (WLAN oder Hotspot). Skripte liegen nur auf dem iPad; neue kommen per Einfügen, per Fernbedienung oder per Import-Link von Claude.';
-    const ch = $('#helpClaude');
-    if (ch) ch.textContent = 'Sag Claude „Mach mir einen Prompter-Import-Link für das Skript aus Projekt …“. Claude holt den Text, setzt Kapitel und gibt dir einen Link. Den Link in der App unter „Skript → Import-Link einfügen“ einfügen oder in der Fernbedienung an das iPad schicken.';
-    $('#rPair').hidden = $('#rSend').hidden = !P2P.on;
-    if (P2P.on) p2pStart();
-    try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
+  function onScriptsChanged() {
+    if (!S.scripts.has(S.activeId)) {
+      const f = sorted()[0];
+      S.activeId = f ? f.id : null;
+    }
+    renderEditor(false);
+    if (S.view === "prompter") {
+      const sc = activeScript();
+      if (keyOf(sc) !== builtFor) rebuildKeepPos();
+    }
+    renderRemote();
+    pushPresence();
   }
-  booted = true;
-  renderConn(); renderCode(); renderEditor(false); renderRemote(); pushPresence(true);
-}
-boot();
+  function parse(text) {
+    const out = [];
+    let para = [];
+    const flush = () => {
+      if (para.length) {
+        out.push({ t: "p", lines: para });
+        para = [];
+      }
+    };
+    for (const raw of String(text || "").replace(/\r\n?/g, "\n").split("\n")) {
+      const m = raw.match(/^\s*#{1,6}\s*(.*)$/);
+      if (m) {
+        flush();
+        out.push({ t: "h", title: m[1].trim() || "Kapitel" });
+      } else if (!raw.trim()) flush();
+      else para.push(raw.trim());
+    }
+    flush();
+    return out;
+  }
+  const chaptersOf = (text) => parse(text).filter((b) => b.t === "h").map((b) => b.title);
+  function wordCount(text) {
+    return String(text || "").split("\n").filter((l) => !/^\s*#/.test(l)).join(" ").split(/\s+/).filter(Boolean).length;
+  }
+  function fmt(sec) {
+    sec = Math.max(0, Math.round(sec || 0));
+    return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
+  }
+  function setSetting(k, v) {
+    var _a;
+    if (LIM[k]) v = clamp(Math.round(+v) || DEF[k], LIM[k][0], LIM[k][1]);
+    if (k === "theme" && !["wb", "yb", "bw"].includes(v)) return;
+    if (k === "mirrorH" || k === "mirrorV") v = !!v;
+    const relayout = (k === "size" || k === "margin") && S.view === "prompter";
+    const max0 = maxPos();
+    const ratio = relayout && max0 ? ((_a = S.target) != null ? _a : S.pos) / max0 : null;
+    S.set[k] = v;
+    LS.set("tp.settings", S.set);
+    applySettings();
+    if (ratio != null) {
+      S.target = null;
+      S.pos = ratio * maxPos();
+    }
+    pushPresence(true);
+  }
+  function applySettings() {
+    const p = $("#v-prompter"), s = S.set;
+    p.style.setProperty("--fs", s.size + "px");
+    p.style.setProperty("--mx", s.margin + "%");
+    p.style.setProperty("--rl", s.line + "%");
+    p.dataset.theme = s.theme;
+    $("#flip").style.transform = "scale(".concat(s.mirrorH ? -1 : 1, ",").concat(s.mirrorV ? -1 : 1, ")");
+    $("#setSize").value = s.size;
+    $("#oSize").textContent = s.size + " px";
+    $("#setSpeed").value = s.speed;
+    $("#oSpeed").textContent = s.speed;
+    $("#setMargin").value = s.margin;
+    $("#oMargin").textContent = s.margin + " %";
+    $("#setLine").value = s.line;
+    $("#oLine").textContent = s.line + " %";
+    $("#pSpeed").textContent = s.speed;
+    $("#pSize").textContent = s.size;
+    for (const id of ["#edMH", "#pMH"]) $(id).setAttribute("aria-pressed", s.mirrorH);
+    for (const id of ["#edMV", "#pMV"]) $(id).setAttribute("aria-pressed", s.mirrorV);
+    $$("[data-theme]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.theme === s.theme));
+  }
+  function renderScriptSelects() {
+    const list = sorted();
+    for (const sel of P2P.on ? [$("#scriptSel")] : [$("#scriptSel"), $("#rScript")]) {
+      sel.textContent = "";
+      if (!list.length) {
+        const o = new Option("Noch kein Skript", "");
+        sel.add(o);
+        sel.disabled = true;
+        continue;
+      }
+      sel.disabled = false;
+      for (const sc of list) sel.add(new Option(sc.title || "Ohne Titel", sc.id));
+      sel.value = S.activeId || "";
+    }
+  }
+  function renderEditor(force) {
+    renderScriptSelects();
+    const sc = activeScript(), ta = $("#text"), ti = $("#title");
+    const editing = document.activeElement === ta || document.activeElement === ti;
+    if (force || !dirty && !editing) {
+      ta.value = sc ? sc.text : "";
+      ti.value = sc ? sc.title : "";
+    }
+    $("#btnDel").disabled = !sc;
+    if (!dirty) setSaveState(sc ? db ? "Gespeichert" : "Auf diesem Ger\xE4t gespeichert" : "");
+    renderChapterList();
+    renderStats();
+  }
+  function renderStats() {
+    const w = wordCount($("#text").value);
+    $("#stWords").textContent = w + " W\xF6rter";
+    $("#stDur").textContent = "ca. " + fmt(w / WPM * 60) + " Min Sprechzeit bei " + WPM + " W\xF6rtern/Min";
+  }
+  function renderChapterList() {
+    const ol = $("#chList");
+    ol.textContent = "";
+    const lines = $("#text").value.split("\n");
+    const ta = $("#text");
+    const curLine = ta.value.slice(0, ta.selectionStart).split("\n").length - 1;
+    let n = 0, onIdx = -1;
+    lines.forEach((l, i) => {
+      if (/^\s*#/.test(l) && i <= curLine) onIdx = n;
+      if (/^\s*#/.test(l)) n++;
+    });
+    n = 0;
+    lines.forEach((l, i) => {
+      const m = l.match(/^\s*#{1,6}\s*(.*)$/);
+      if (!m) return;
+      const li = document.createElement("li");
+      if (n === onIdx) li.className = "on";
+      const b = document.createElement("button");
+      b.textContent = m[1].trim() || "Kapitel";
+      b.addEventListener("click", () => jumpEditorToLine(i));
+      li.append(b);
+      ol.append(li);
+      n++;
+    });
+    $("#chEmpty").hidden = n > 0;
+  }
+  function jumpEditorToLine(i) {
+    const ta = $("#text"), lines = ta.value.split("\n");
+    let off = 0;
+    for (let k = 0; k < i; k++) off += lines[k].length + 1;
+    ta.focus();
+    ta.setSelectionRange(off, off + lines[i].length);
+    const lh = parseFloat(getComputedStyle(ta).lineHeight) || 28;
+    ta.scrollTop = Math.max(0, i * lh - ta.clientHeight / 3);
+    renderChapterList();
+  }
+  function insertMark() {
+    const ta = $("#text");
+    if (!activeScript()) newScript("");
+    const v = ta.value, pos = ta.selectionStart;
+    const start = v.lastIndexOf("\n", pos - 1) + 1;
+    const n = chaptersOf(v.slice(0, start)).length + 1;
+    const name = "Kapitel " + n;
+    const lineEmpty = !v.slice(start, v.indexOf("\n", start) === -1 ? v.length : v.indexOf("\n", start)).trim();
+    const ins = "# " + name + (lineEmpty ? "" : "\n");
+    ta.focus();
+    ta.setRangeText(ins, start, start, "end");
+    ta.setSelectionRange(start + 2, start + 2 + name.length);
+    scheduleSave();
+    renderChapterList();
+    renderStats();
+  }
+  let sample = null, undoText = null, autoBusy = false;
+  function splitUnits(text) {
+    const src = String(text).replace(/\r\n?/g, "\n").split("\n").filter((l) => !/^\s*#/.test(l));
+    const units = [];
+    const perLine = src.map((l) => {
+      if (!l.trim()) return [];
+      const parts = l.length > 300 ? l.trim().match(/[^.!?…]+[.!?…]+["“”»«'’)]*\s*|[^.!?…]+$/g) || [l.trim()] : [l.trim()];
+      return parts.map((p) => p.trim()).filter(Boolean).map((p) => {
+        units.push(p);
+        return units.length - 1;
+      });
+    });
+    return { src, units, perLine };
+  }
+  function rebuildWithMarks(sp, marks) {
+    const out = [];
+    sp.src.forEach((l, li) => {
+      const ids = sp.perLine[li];
+      if (!ids.length) {
+        out.push("");
+        return;
+      }
+      let cur = [];
+      for (const u of ids) {
+        if (marks.has(u)) {
+          if (cur.length) {
+            out.push(cur.join(" "));
+            cur = [];
+          }
+          if (out.length && out[out.length - 1].trim()) out.push("");
+          out.push("# " + marks.get(u));
+        }
+        cur.push(sp.units[u]);
+      }
+      out.push(cur.join(" "));
+    });
+    return out.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
+  }
+  function autoState(t, err) {
+    const el = $("#autoState");
+    el.textContent = t;
+    el.classList.toggle("err", !!err);
+  }
+  async function autoChapters() {
+    if (autoBusy || !sample) return;
+    const ta = $("#text"), text = ta.value;
+    const sp = splitUnits(text);
+    if (sp.units.length < 2) {
+      autoState("Zu wenig Text zum Aufteilen.", true);
+      return;
+    }
+    autoBusy = true;
+    $("#btnAuto").disabled = true;
+    autoState("Claude liest den Text \u2026");
+    const listing = sp.units.map((u, i) => "[" + (i + 1) + "] " + u).join("\n");
+    const prompt = 'Du bereitest ein gesprochenes Skript f\xFCr einen Teleprompter vor (Imagefilm, Recruitingfilm, Interview, Moderation). Teile es in sinnvolle Kapitel: thematische Abschnitte, an denen man beim Dreh neu ansetzen w\xFCrde. Faustregel: ein Kapitel pro 60 bis 150 W\xF6rter, mindestens 2, h\xF6chstens 15. Das erste Kapitel beginnt bei Einheit 1. Kapitelnamen: Deutsch, 1 bis 4 W\xF6rter, beschreibend (zum Beispiel "Intro", "Arbeitsalltag", "Call to Action").\n\nAntworte NUR mit JSON in dieser Form: {"title": "kurzer Titel f\xFCr das Skript", "chapters": [{"start": 1, "name": "Intro"}]}\n"start" ist die Nummer der Einheit, mit der das Kapitel beginnt.\n\nText in nummerierten Einheiten:\n' + listing;
+    try {
+      const res = await sample.json(prompt, { modelTier: "default" });
+      const chs = res && Array.isArray(res.chapters) ? res.chapters : [];
+      const marks = /* @__PURE__ */ new Map();
+      for (const c of chs) {
+        const i = (Number(c && c.start) | 0) - 1;
+        const name = String(c && c.name || "").replace(/^#+\s*/, "").replace(/\s+/g, " ").trim().slice(0, 60);
+        if (i >= 0 && i < sp.units.length && name && !marks.has(i)) marks.set(i, name);
+      }
+      if (!marks.size) throw { code: "empty" };
+      if (ta.value !== text) {
+        autoState("Text wurde zwischendurch ge\xE4ndert. Bitte nochmal starten.", true);
+        return;
+      }
+      undoText = text;
+      if (!activeScript()) newScript("");
+      ta.value = rebuildWithMarks(sp, new Map([...marks].sort((a, b) => a[0] - b[0])));
+      const ti = $("#title");
+      if (res.title && (!ti.value.trim() || ti.value === "Neues Skript")) ti.value = String(res.title).slice(0, 80);
+      scheduleSave();
+      renderChapterList();
+      renderStats();
+      $("#btnUndo").hidden = false;
+      autoState(marks.size + " Kapitel gesetzt. Wortlaut unver\xE4ndert.");
+    } catch (e) {
+      const code = e && e.code;
+      autoState(code === "not_granted" ? "Claude-Zugriff wurde nicht erlaubt." : code === "rate_limited" ? "Gerade zu viele Anfragen. In einer Minute nochmal." : code === "cancelled" ? "Abgebrochen." : "Hat nicht geklappt. Bitte nochmal versuchen.", true);
+    } finally {
+      autoBusy = false;
+      $("#btnAuto").disabled = false;
+    }
+  }
+  function undoAuto() {
+    if (undoText == null) return;
+    $("#text").value = undoText;
+    undoText = null;
+    $("#btnUndo").hidden = true;
+    scheduleSave();
+    renderChapterList();
+    renderStats();
+    autoState("R\xFCckg\xE4ngig gemacht.");
+  }
+  const track = $("#track");
+  let chapterEls = [], endEl = null, builtFor = null;
+  const keyOf = (sc) => sc ? sc.id + "|" + sc.text : "";
+  function buildTrack() {
+    const sc = activeScript();
+    track.textContent = "";
+    chapterEls = [];
+    endEl = null;
+    builtFor = keyOf(sc);
+    const has = !!(sc && sc.text.trim());
+    $("#pEmpty").hidden = has;
+    if (!has) return;
+    let n = 0;
+    for (const b of parse(sc.text)) {
+      if (b.t === "h") {
+        const d = document.createElement("div");
+        d.className = "cue";
+        const k = document.createElement("span");
+        k.className = "cue-n";
+        k.textContent = String(++n).padStart(2, "0");
+        const t = document.createElement("span");
+        t.textContent = b.title;
+        d.append(k, t);
+        track.append(d);
+        chapterEls.push(d);
+      } else {
+        const p = document.createElement("p");
+        b.lines.forEach((l, i) => {
+          if (i) p.append(document.createElement("br"));
+          p.append(l);
+        });
+        track.append(p);
+      }
+    }
+    endEl = document.createElement("div");
+    endEl.className = "end";
+    endEl.textContent = "ENDE";
+    track.append(endEl);
+  }
+  function rebuildKeepPos() {
+    const m = maxPos(), r = m ? S.pos / m : 0;
+    buildTrack();
+    S.target = null;
+    S.pos = r * maxPos();
+  }
+  const maxPos = () => endEl ? endEl.offsetTop : 0;
+  const pxPerSec = () => S.set.speed * S.set.size * 0.08;
+  const chStarts = () => chapterEls.map((e) => e.offsetTop);
+  const ref = () => {
+    var _a;
+    return (_a = S.target) != null ? _a : S.pos;
+  };
+  const tol = () => S.set.size * 0.8;
+  function curChapter() {
+    let i = -1;
+    chStarts().forEach((y, k) => {
+      if (y <= S.pos + tol()) i = k;
+    });
+    return i;
+  }
+  function goTo(y) {
+    S.target = clamp(y, 0, maxPos());
+  }
+  function nextCh() {
+    const y = chStarts().find((y2) => y2 > ref() + tol());
+    goTo(y != null ? y : maxPos());
+  }
+  function prevCh() {
+    const b = chStarts().filter((y) => y < ref() - 40);
+    goTo(b.length ? b[b.length - 1] : 0);
+  }
+  function nudge(d) {
+    goTo(ref() + d * S.set.size * 1.32 * 2);
+  }
+  function setPlay(on) {
+    if (on && S.pos >= maxPos() - 1 && maxPos() > 0) {
+      S.pos = 0;
+      S.target = null;
+    }
+    S.playing = !!on && maxPos() > 0;
+    const p = $("#v-prompter");
+    p.classList.toggle("playing", S.playing);
+    $("#pPlay").innerHTML = S.playing ? ICON_PAUSE : ICON_PLAY;
+    showUi();
+    pushPresence(true);
+  }
+  let hideT = 0;
+  function showUi() {
+    const p = $("#v-prompter");
+    p.classList.add("ui");
+    clearTimeout(hideT);
+    if (S.playing) hideT = setTimeout(() => p.classList.remove("ui"), 2200);
+  }
+  let toastT = 0;
+  function toast(t) {
+    const el = $("#toast");
+    el.textContent = t;
+    el.classList.add("on");
+    clearTimeout(toastT);
+    toastT = setTimeout(() => el.classList.remove("on"), 1300);
+  }
+  const CMDS = {
+    play: () => setPlay(true),
+    pause: () => setPlay(false),
+    toggle: () => setPlay(!S.playing),
+    stop: () => {
+      setPlay(false);
+      goTo(0);
+    },
+    next: nextCh,
+    prev: prevCh,
+    top: () => goTo(0),
+    back: () => nudge(-1),
+    fwd: () => nudge(1),
+    chapter: (v) => {
+      const y = chStarts()[v | 0];
+      if (y != null) goTo(y);
+    },
+    speed: (v) => setSetting("speed", v),
+    size: (v) => setSetting("size", v),
+    margin: (v) => setSetting("margin", v),
+    faster: () => setSetting("speed", S.set.speed + 1),
+    slower: () => setSetting("speed", S.set.speed - 1),
+    bigger: () => setSetting("size", S.set.size + 4),
+    smaller: () => setSetting("size", S.set.size - 4),
+    mirrorH: (v) => setSetting("mirrorH", typeof v === "boolean" ? v : !S.set.mirrorH),
+    mirrorV: (v) => setSetting("mirrorV", typeof v === "boolean" ? v : !S.set.mirrorV),
+    theme: (v) => setSetting("theme", v)
+  };
+  const LABEL = {
+    play: "Start",
+    pause: "Pause",
+    stop: "Stopp",
+    toggle: "",
+    next: "N\xE4chstes Kapitel",
+    prev: "Kapitel zur\xFCck",
+    top: "Anfang",
+    chapter: "Kapitelsprung",
+    speed: "Tempo",
+    size: "Schrift",
+    faster: "Schneller",
+    slower: "Langsamer",
+    bigger: "Schrift gr\xF6\xDFer",
+    smaller: "Schrift kleiner",
+    mirrorH: "Spiegelung",
+    mirrorV: "Spiegelung",
+    back: "",
+    fwd: ""
+  };
+  function exec(cmd, v, src) {
+    if (S.view !== "prompter") return;
+    if (!Object.prototype.hasOwnProperty.call(CMDS, cmd)) return;
+    if (typeof v === "number" && !isFinite(v)) return;
+    CMDS[cmd](v);
+    if (src && LABEL[cmd]) toast((src === "claude" ? "Claude: " : "Fernbedienung: ") + LABEL[cmd]);
+  }
+  let raf = 0, lastT = 0, dragging = null, hudT = 0;
+  function loop(t) {
+    raf = requestAnimationFrame(loop);
+    const dt = lastT ? Math.min(0.1, (t - lastT) / 1e3) : 0;
+    lastT = t;
+    const max = maxPos();
+    if (S.target != null) {
+      const d = S.target - S.pos;
+      S.pos += d * Math.min(1, dt * 9);
+      if (Math.abs(d) < 0.6) {
+        S.pos = S.target;
+        S.target = null;
+      }
+    } else if (S.playing && !dragging) {
+      S.pos += pxPerSec() * dt;
+      if (S.pos >= max) {
+        S.pos = max;
+        setPlay(false);
+      }
+    }
+    S.pos = clamp(S.pos, 0, max);
+    track.style.transform = "translate3d(0,".concat((-S.pos).toFixed(2), "px,0)");
+    if (t - hudT > 250) {
+      hudT = t;
+      renderHud();
+      pushPresence(false);
+    }
+  }
+  function renderHud() {
+    var _a;
+    const chs = chapterEls.map((e) => e.lastChild.textContent), i = curChapter();
+    $("#pChapter").textContent = chs.length ? i >= 0 ? "Kapitel ".concat(i + 1, "/").concat(chs.length, " \xB7 ").concat(chs[i]) : "Vor Kapitel 1" : ((_a = activeScript()) == null ? void 0 : _a.title) || "";
+    const rem = (maxPos() - S.pos) / pxPerSec();
+    $("#pTime").textContent = "noch " + fmt(rem) + " bei Tempo " + S.set.speed;
+    const n = P2P.on ? P2P.conns.size : remotePeers().length;
+    const r = $("#pRemotes");
+    r.dataset.s = n ? "live" : room && room.connected() || P2P.status === "ready" ? "sync" : "";
+    r.textContent = n ? n === 1 ? "1 Fernbedienung verbunden" : n + " Fernbedienungen verbunden" : room || P2P.status === "ready" ? "Keine Fernbedienung" : "Fernbedienung nicht verf\xFCgbar";
+    $("#pCode").textContent = P2P.on && P2P.code ? "Code " + P2P.code : "";
+  }
+  const stage = $("#stage");
+  stage.addEventListener("pointerdown", (e) => {
+    dragging = { y: e.clientY, pos: S.pos, moved: false };
+    try {
+      stage.setPointerCapture(e.pointerId);
+    } catch {
+    }
+  });
+  stage.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "mouse" && !dragging) {
+      showUi();
+      return;
+    }
+    if (!dragging) return;
+    const dy = e.clientY - dragging.y;
+    if (Math.abs(dy) > 8) dragging.moved = true;
+    if (dragging.moved) {
+      S.target = null;
+      S.pos = clamp(dragging.pos + (S.set.mirrorV ? 1 : -1) * dy, 0, maxPos());
+    }
+  });
+  const endDrag = () => {
+    if (dragging && !dragging.moved) setPlay(!S.playing);
+    dragging = null;
+  };
+  stage.addEventListener("pointerup", endDrag);
+  stage.addEventListener("pointercancel", () => {
+    dragging = null;
+  });
+  if (!window.PointerEvent) {
+    stage.addEventListener("touchstart", (e) => {
+      dragging = { y: e.touches[0].clientY, pos: S.pos, moved: false };
+    }, { passive: true });
+    stage.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+      if (!dragging) return;
+      const dy = e.touches[0].clientY - dragging.y;
+      if (Math.abs(dy) > 8) dragging.moved = true;
+      if (dragging.moved) {
+        S.target = null;
+        S.pos = clamp(dragging.pos + (S.set.mirrorV ? 1 : -1) * dy, 0, maxPos());
+      }
+    }, { passive: false });
+    stage.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      endDrag();
+    }, { passive: false });
+    stage.addEventListener("touchcancel", () => {
+      dragging = null;
+    });
+  }
+  stage.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    S.target = null;
+    S.pos = clamp(S.pos + (S.set.mirrorV ? -1 : 1) * e.deltaY, 0, maxPos());
+  }, { passive: false });
+  $("#ctrl").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-c]");
+    if (!b) return;
+    const c = b.dataset.c;
+    if (c === "close") go("editor");
+    else if (c === "fs") toggleFs();
+    else CMDS[c]();
+    showUi();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (S.view !== "prompter" || e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    const map = {
+      " ": "toggle",
+      Enter: "toggle",
+      b: "toggle",
+      B: "toggle",
+      ".": "toggle",
+      k: "toggle",
+      F5: "toggle",
+      Escape: "pause",
+      ArrowRight: "next",
+      PageDown: "next",
+      ArrowLeft: "prev",
+      PageUp: "prev",
+      ArrowUp: "faster",
+      ArrowDown: "slower",
+      "+": "bigger",
+      "=": "bigger",
+      "-": "smaller",
+      Home: "top",
+      h: "mirrorH",
+      H: "mirrorH",
+      v: "mirrorV",
+      V: "mirrorV"
+    };
+    if (k === "f" || k === "F") {
+      toggleFs();
+      e.preventDefault();
+      return;
+    }
+    const c = map[k];
+    if (!c) return;
+    e.preventDefault();
+    CMDS[c]();
+    if (c !== "toggle") showUi();
+  });
+  let wl = null;
+  async function wake(on) {
+    try {
+      if (on && !wl && navigator.wakeLock) {
+        wl = await navigator.wakeLock.request("screen");
+        wl.addEventListener("release", () => {
+          wl = null;
+        });
+      } else if (!on && wl) {
+        await wl.release();
+        wl = null;
+      }
+    } catch {
+      wl = null;
+    }
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && S.view === "prompter") wake(true);
+  });
+  function fsEl() {
+    return document.fullscreenElement || document.webkitFullscreenElement;
+  }
+  function toggleFs() {
+    const el = document.documentElement;
+    try {
+      if (fsEl()) {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        return;
+      }
+      const req = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (!req) {
+        toast("Vollbild ist hier nicht verf\xFCgbar");
+        return;
+      }
+      const r = req.call(el);
+      if (r && r.catch) r.catch(() => toast("Vollbild ist hier nicht verf\xFCgbar"));
+    } catch {
+      toast("Vollbild ist hier nicht verf\xFCgbar");
+    }
+  }
+  let presKey = "";
+  function prompterState() {
+    const sc = activeScript(), max = maxPos();
+    return {
+      t: ((sc == null ? void 0 : sc.title) || "").slice(0, 80),
+      id: S.activeId || "",
+      pl: S.playing,
+      sp: S.set.speed,
+      sz: S.set.size,
+      mh: S.set.mirrorH,
+      mv: S.set.mirrorV,
+      ch: curChapter(),
+      pr: max ? Math.round(S.pos / max * 1e3) / 1e3 : 0,
+      rem: Math.round((max - S.pos) / pxPerSec()),
+      chs: chapterEls.slice(0, 40).map((e) => e.lastChild.textContent.slice(0, 48))
+    };
+  }
+  function pushPresence() {
+    const p = S.view === "prompter" ? prompterState() : null;
+    if (p) syncStatus(p);
+    p2pBroadcast(p);
+    if (!room) return;
+    const obj = { role: S.view, p };
+    const key = JSON.stringify(obj);
+    if (key === presKey) return;
+    presKey = key;
+    room.presence(obj).catch(() => {
+      presKey = "";
+    });
+  }
+  let stKey = "", stLast = 0, stTimer = 0, stQ = Promise.resolve(), stP = null;
+  function syncStatus(p) {
+    if (!db) return;
+    stP = p;
+    const { pr, rem, ...core } = p;
+    const key = JSON.stringify(core);
+    if (key !== stKey) {
+      stKey = key;
+      clearTimeout(stTimer);
+      stTimer = setTimeout(writeStatus, 250);
+    } else if (S.playing && Date.now() - stLast > 3e3) writeStatus();
+  }
+  function writeStatus(clear) {
+    clearTimeout(stTimer);
+    stLast = Date.now();
+    const body = { p: clear ? null : stP, at: Date.now() };
+    if (clear) stKey = "";
+    stQ = stQ.then(() => db.doc("live/status").set(body)).catch(() => {
+    });
+  }
+  const livePeers = () => room ? room.peers().filter((p) => !p.sameTab && p.presence) : [];
+  const remotePeers = () => livePeers().filter((p) => p.presence.role === "remote");
+  let dbStatus = null;
+  function currentPrompter() {
+    if (P2P.on) return P2P.rconn && P2P.rconn.open && P2P.state && P2P.state.p && typeof P2P.state.p === "object" ? Object.assign({}, P2P.state.p, { src: "p2p" }) : null;
+    const ps = livePeers().filter((p) => p.presence.role === "prompter" && p.presence.p && typeof p.presence.p === "object");
+    if (ps.length) return Object.assign({}, ps.reduce((a, b) => a.updatedAt >= b.updatedAt ? a : b).presence.p, { src: "live" });
+    if (dbStatus && dbStatus.p && typeof dbStatus.p === "object" && Date.now() - dbStatus.at < 15 * 60 * 1e3)
+      return Object.assign({}, dbStatus.p, { src: "db", at: dbStatus.at });
+    return null;
+  }
+  let cmdQ = Promise.resolve(), sentQ = [], lastSent = 0;
+  function sendDb(d) {
+    var _a, _b;
+    lastSent = Math.max(Date.now(), lastSent + 1);
+    sentQ.push({ seq: lastSent, cmd: d.cmd, value: (_a = d.value) != null ? _a : null });
+    sentQ = sentQ.slice(-8);
+    const body = { seq: lastSent, cmd: d.cmd, value: (_b = d.value) != null ? _b : null, from: "remote", queue: sentQ.slice() };
+    cmdQ = cmdQ.then(() => db.doc("live/command").set(body)).catch(() => {
+    });
+  }
+  function send(cmd, value) {
+    const d = value === void 0 ? { cmd } : { cmd, value };
+    try {
+      navigator.vibrate && navigator.vibrate(8);
+    } catch {
+    }
+    if (P2P.on) {
+      if (P2P.rconn && P2P.rconn.open) P2P.rconn.send({ type: "cmd", ...d });
+      else {
+        $("#rPairState").textContent = "Nicht verbunden. Code eingeben und \u201EVerbinden\u201C tippen.";
+      }
+      return;
+    }
+    if (room && room.connected()) room.emit("cmd", d).catch(() => {
+      if (db) sendDb(d);
+    });
+    else if (db) sendDb(d);
+    else if (bc) bc.postMessage({ type: "cmd", ...d });
+  }
+  function connState() {
+    if (P2P.on) {
+      if (P2P.status === "ready") return ["live", "Bereit f\xFCr die Fernbedienung"];
+      if (P2P.status === "offline") return ["", "Kein Internet: Fernbedienung per Handy gerade nicht m\xF6glich. Bluetooth-Clicker funktionieren."];
+      return ["sync", "Verbinde mit dem Kopplungsdienst \u2026"];
+    }
+    if (STANDALONE) return ["", "Fernbedienung per Handy nicht verf\xFCgbar. Bluetooth-Clicker funktionieren."];
+    if (!booted) return ["", "Verbinde \u2026"];
+    if (room && room.connected()) return ["live", "Live-Verbindung aktiv"];
+    if (room || db) return ["sync", db ? "Cloud-Speicher aktiv, Live-Verbindung wird aufgebaut \u2026" : "Live-Verbindung wird aufgebaut \u2026"];
+    return ["", "Nur dieses Ger\xE4t: keine Fernbedienung m\xF6glich"];
+  }
+  function renderConn() {
+    const [s, t] = connState();
+    for (const id of ["#homeStatus", "#rStatus"]) {
+      const el = $(id);
+      el.dataset.s = s;
+      el.textContent = t;
+    }
+  }
+  let rChKey = "";
+  function renderRemote() {
+    renderConn();
+    if (S.view !== "remote") return;
+    const p = currentPrompter(), sc = activeScript();
+    const chs = p && Array.isArray(p.chs) ? p.chs.map(String) : sc ? chaptersOf(sc.text) : [];
+    const ci = p ? Number(p.ch) | 0 : -1;
+    $("#rTitle").textContent = p ? String(p.t || "") || "Ohne Titel" : (sc == null ? void 0 : sc.title) || "Kein Skript";
+    $("#rChapter").textContent = p ? chs.length ? ci >= 0 ? "Kapitel ".concat(ci + 1, " von ").concat(chs.length, ": ").concat(chs[ci] || "") : "Vor dem ersten Kapitel" : "Keine Kapitelmarken" : "Kein Prompter verbunden. \xD6ffne auf dem iPad \u201EPrompter\u201C.";
+    const pr = p ? clamp(Number(p.pr) || 0, 0, 1) : 0;
+    $("#rProg").style.width = (pr * 100).toFixed(1) + "%";
+    $("#rPct").textContent = p ? Math.round(pr * 100) + " %" : "";
+    $("#rRemain").textContent = p ? "noch " + fmt(Number(p.rem)) : "";
+    const playing = !!(p && p.pl);
+    const rp = $("#rPlay");
+    rp.classList.toggle("playing", playing);
+    rp.innerHTML = (playing ? ICON_PAUSE : ICON_PLAY) + (playing ? "Pause" : "Start");
+    $("#rSpeed").textContent = p ? Number(p.sp) || "\u2013" : "\u2013";
+    $("#rSize").textContent = p ? Number(p.sz) || "\u2013" : "\u2013";
+    $("#rMH").setAttribute("aria-pressed", !!(p && p.mh));
+    $("#rMV").setAttribute("aria-pressed", !!(p && p.mv));
+    const src = $("#rSrc");
+    if (P2P.on) renderPair(p);
+    if (!p) {
+      src.dataset.s = "";
+      src.textContent = P2P.on ? "" : "Prompter-Stand unbekannt. Befehle werden trotzdem gesendet.";
+    } else if (p.src === "live" || p.src === "p2p") {
+      src.dataset.s = "live";
+      src.textContent = p.src === "p2p" ? "Direkt mit dem iPad verbunden" : "Prompter live verbunden";
+    } else {
+      const age = Math.max(0, Math.round((Date.now() - p.at) / 1e3));
+      src.dataset.s = "sync";
+      src.textContent = "\xDCber Speicher verbunden \xB7 Stand vor " + (age < 60 ? age + " s" : fmt(age) + " Min");
+    }
+    if (P2P.on) {
+      const list = P2P.rconn && P2P.rconn.open && P2P.state && Array.isArray(P2P.state.scripts) ? P2P.state.scripts : [];
+      $("#rScriptWrap").hidden = !list.length;
+      const key2 = JSON.stringify(list) + "|" + (P2P.state && P2P.state.active);
+      const sel = $("#rScript");
+      if (sel.dataset.key !== key2) {
+        sel.dataset.key = key2;
+        sel.textContent = "";
+        for (const s of list) if (s && typeof s === "object") sel.add(new Option(String(s.title || "Ohne Titel"), String(s.id)));
+        sel.value = String(P2P.state && P2P.state.active || "");
+      }
+    } else $("#rScriptWrap").hidden = !db || S.scripts.size === 0;
+    const key = chs.join("") + "|" + ci;
+    if (key !== rChKey) {
+      rChKey = key;
+      const ol = $("#rChapters");
+      ol.textContent = "";
+      chs.forEach((t, i) => {
+        const li = document.createElement("li");
+        if (i === ci) li.className = "on";
+        const b = document.createElement("button");
+        b.textContent = t;
+        b.addEventListener("click", () => send("chapter", i));
+        li.append(b);
+        ol.append(li);
+      });
+      $("#rChEmpty").hidden = chs.length > 0;
+    }
+  }
+  $("#v-remote").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-r]");
+    if (!b) return;
+    send(b.dataset.r);
+  });
+  setInterval(() => {
+    if (S.view === "remote") renderRemote();
+  }, 1e3);
+  $("#rScript").addEventListener("change", (e) => {
+    if (!e.target.value) return;
+    if (P2P.on) send("script", e.target.value);
+    else setActive(e.target.value, true);
+  });
+  const PEER_PREFIX = "colada-prompter-v1-";
+  function p2pStart() {
+    if (!P2P.on || P2P.peer) return;
+    let code = LS.get("tp.code", null);
+    if (!/^\d{4}$/.test(code || "")) {
+      code = String(1e3 + Math.floor(Math.random() * 9e3));
+      LS.set("tp.code", code);
+    }
+    P2P.code = code;
+    P2P.status = "connecting";
+    const peer = new window.Peer(PEER_PREFIX + code, Object.assign({ debug: 0 }, window.PROMPTER_PEER_OPTS || {}));
+    P2P.peer = peer;
+    peer.on("open", () => {
+      P2P.status = "ready";
+      P2P.idTries = 0;
+      renderCode();
+      renderConn();
+      if (P2P.target && S.view === "remote") p2pConnect(P2P.target);
+      else if (pendingImport && S.view === "receive") p2pConnect($("#rcCode").value);
+    });
+    peer.on("connection", (c) => {
+      c.on("open", () => {
+        P2P.conns.add(c);
+        P2P.sentKey = "";
+        pushPresence();
+        if (S.view === "prompter") renderHud();
+      });
+      c.on("data", (d) => onHostData(c, d));
+      c.on("close", () => {
+        P2P.conns.delete(c);
+        if (S.view === "prompter") renderHud();
+      });
+      c.on("error", () => {
+        P2P.conns.delete(c);
+      });
+    });
+    peer.on("disconnected", () => {
+      if (P2P.peer !== peer) return;
+      P2P.status = "connecting";
+      renderConn();
+      setTimeout(() => {
+        try {
+          if (!peer.destroyed) peer.reconnect();
+        } catch {
+        }
+      }, 2e3);
+    });
+    peer.on("error", (e) => {
+      const t = e && e.type;
+      if (t === "unavailable-id") {
+        peer.destroy();
+        P2P.peer = null;
+        if (++P2P.idTries > 4) {
+          LS.set("tp.code", null);
+          P2P.idTries = 0;
+        }
+        setTimeout(p2pStart, 3e3);
+      } else if (t === "peer-unavailable") {
+        P2P.rstatus = "notfound";
+        renderRemote();
+        if (S.view === "receive") rcState("iPad " + P2P.target + " nicht gefunden. Ist die App dort offen und online? Neuer Versuch l\xE4uft \u2026");
+      } else if (t === "network" || t === "server-error" || t === "socket-error" || t === "socket-closed" || t === "browser-incompatible") {
+        P2P.status = "offline";
+        renderConn();
+        if (t !== "browser-incompatible") setTimeout(() => {
+          try {
+            if (!peer.destroyed) peer.reconnect();
+          } catch {
+          }
+        }, 5e3);
+      }
+    });
+  }
+  function renderCode() {
+    const show2 = P2P.on && !!P2P.code;
+    $("#homeCode").hidden = !show2;
+    $("#homeCodeVal").textContent = P2P.code || "\xB7\xB7\xB7\xB7";
+  }
+  function p2pBroadcast(p) {
+    if (!P2P.on || !P2P.conns.size) return;
+    const msg = {
+      type: "state",
+      p: p || null,
+      active: S.activeId || "",
+      scripts: sorted().slice(0, 40).map((s) => ({ id: s.id, title: String(s.title || "").slice(0, 80) }))
+    };
+    const key = JSON.stringify(msg);
+    if (key === P2P.sentKey) return;
+    P2P.sentKey = key;
+    P2P.conns.forEach((c) => {
+      try {
+        if (c.open) c.send(msg);
+      } catch {
+      }
+    });
+  }
+  function onHostData(c, d) {
+    if (!d || typeof d !== "object") return;
+    if (d.type === "cmd" && typeof d.cmd === "string") {
+      if (d.cmd === "script") {
+        const id = String(d.value || "");
+        if (S.scripts.has(id)) setActive(id, false);
+      } else exec(d.cmd, d.value, "remote");
+    } else if (d.type === "import") {
+      importAny(String(d.text || ""), String(d.title || "")).then((sc) => {
+        try {
+          c.send({ type: "imported", ok: true, title: sc.title });
+        } catch {
+        }
+        if (S.view === "prompter") toast("Neues Skript: " + sc.title);
+      }, (e) => {
+        try {
+          c.send({ type: "imported", ok: false, reason: String(e && e.code || "") });
+        } catch {
+        }
+      });
+    }
+  }
+  function p2pConnect(code) {
+    code = String(code || "").replace(/\D/g, "").slice(0, 4);
+    if (code.length !== 4) {
+      P2P.rstatus = "badcode";
+      renderRemote();
+      return;
+    }
+    P2P.target = code;
+    LS.set("tp.target", code);
+    if (code === P2P.code) {
+      P2P.rstatus = "self";
+      renderRemote();
+      return;
+    }
+    if (P2P.rconn) {
+      try {
+        P2P.rconn.close();
+      } catch {
+      }
+      P2P.rconn = null;
+    }
+    if (!P2P.peer || !P2P.peer.open) {
+      P2P.rstatus = "waiting";
+      renderRemote();
+      return;
+    }
+    P2P.rstatus = "connecting";
+    renderRemote();
+    const c = P2P.peer.connect(PEER_PREFIX + code, { reliable: true, serialization: "json" });
+    P2P.rconn = c;
+    c.on("open", () => {
+      if (P2P.rconn === c) {
+        P2P.rstatus = "open";
+        renderRemote();
+        flushPendingImport();
+      }
+    });
+    c.on("data", (d) => {
+      if (P2P.rconn !== c || !d || typeof d !== "object") return;
+      if (d.type === "state") {
+        P2P.state = d;
+        P2P.stateAt = Date.now();
+        renderRemote();
+      }
+      if (d.type === "imported") {
+        const msg = d.ok ? "\u2713 Auf dem iPad angelegt: " + String(d.title || "") + ". Es ist dort jetzt das aktive Skript." : "Das iPad konnte den Text nicht \xFCbernehmen. " + (IMPORT_ERR[d.reason] || "");
+        $("#rSendState").textContent = msg;
+        if (S.view === "receive") rcState(msg);
+      }
+    });
+    c.on("close", () => {
+      if (P2P.rconn === c) {
+        P2P.rconn = null;
+        P2P.state = null;
+        P2P.rstatus = "closed";
+        renderRemote();
+      }
+    });
+    c.on("error", () => {
+      if (P2P.rconn === c) {
+        P2P.rstatus = "closed";
+        renderRemote();
+      }
+    });
+  }
+  setInterval(() => {
+    if (!P2P.on || !(S.view === "remote" || S.view === "receive" && pendingImport) || !P2P.target || P2P.rstatus === "self") return;
+    if (P2P.rconn && (P2P.rconn.open || P2P.rstatus === "connecting") || !P2P.peer || !P2P.peer.open) return;
+    p2pConnect(P2P.target);
+  }, 4e3);
+  function renderPair(p) {
+    const st = $("#rPairState"), r = P2P.rstatus;
+    const txt = {
+      open: "Verbunden mit iPad " + P2P.target + ".",
+      connecting: "Verbinde mit " + P2P.target + " \u2026",
+      waiting: "Warte auf den Kopplungsdienst \u2026",
+      notfound: "iPad " + P2P.target + " nicht gefunden. Ist die App dort offen und online? Neuer Versuch l\xE4uft.",
+      closed: "Verbindung getrennt. Neuer Versuch l\xE4uft \u2026",
+      badcode: "Bitte den 4-stelligen Code vom iPad eingeben.",
+      self: "Das ist der Code dieses Ger\xE4ts. Gib den Code vom iPad ein."
+    }[r] || (P2P.status === "offline" ? "Kein Internet: Verbindung nicht m\xF6glich." : "Code vom iPad eingeben.");
+    st.textContent = r === "open" && !p ? "Verbunden mit iPad " + P2P.target + ". Dort ist gerade nicht \u201EPrompter\u201C ge\xF6ffnet." : txt;
+    const inp = $("#rCode");
+    if (document.activeElement !== inp && !inp.value) inp.value = P2P.target || "";
+  }
+  $("#rConnect").addEventListener("click", () => p2pConnect($("#rCode").value));
+  $("#rCode").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") p2pConnect($("#rCode").value);
+  });
+  $("#rSendBtn").addEventListener("click", async () => {
+    const st = $("#rSendState");
+    if (!$("#rSendText").value.trim()) {
+      st.textContent = "Erst Text oder Import-Link einf\xFCgen.";
+      return;
+    }
+    if (!(P2P.rconn && P2P.rconn.open)) {
+      st.textContent = "Nicht mit dem iPad verbunden.";
+      return;
+    }
+    let d;
+    try {
+      d = await resolveImport($("#rSendText").value, $("#rSendTitle").value.trim());
+    } catch (e) {
+      st.textContent = IMPORT_ERR[e && e.code] || "Der Link konnte nicht gelesen werden.";
+      return;
+    }
+    P2P.rconn.send({ type: "import", text: d.text.slice(0, 2e5), title: String(d.title || "").slice(0, 80) });
+    st.textContent = "Gesendet: " + (d.title || guessTitle(d.text)) + " \u2026";
+    $("#rSendText").value = "";
+    $("#rSendTitle").value = "";
+  });
+  function b64urlBytes(s) {
+    s = s.replace(/-/g, "+").replace(/_/g, "/");
+    while (s.length % 4) s += "=";
+    const bin = atob(s), out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  async function inflateRaw(bytes) {
+    if (window.pako && typeof window.pako.inflateRaw === "function") return window.pako.inflateRaw(bytes, { to: "string" });
+    if (typeof DecompressionStream !== "function") throw { code: "unsupported" };
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    return new Response(stream).text();
+  }
+  async function decodeImport(code) {
+    let obj;
+    try {
+      obj = JSON.parse(await inflateRaw(b64urlBytes(code)));
+    } catch (e) {
+      throw { code: e && e.code === "unsupported" ? "unsupported" : "incomplete" };
+    }
+    if (!obj || typeof obj !== "object" || !String(obj.x || "").trim()) throw { code: "incomplete" };
+    return { title: String(obj.t || ""), text: String(obj.x || "") };
+  }
+  function findImportCode(input) {
+    const flat = String(input || "").replace(/\s+/g, "");
+    const m = flat.match(/(?:^|[#&?])i=([A-Za-z0-9_-]{8,})$/);
+    return m ? m[1] : null;
+  }
+  const IMPORT_ERR = {
+    incomplete: "Der Link ist unvollst\xE4ndig. Bitte den ganzen Link kopieren, er ist sehr lang.",
+    unsupported: "Dieses Ger\xE4t kann den Link nicht lesen. F\xFCge stattdessen den Skripttext ein."
+  };
+  async function resolveImport(input, title) {
+    input = String(input || "").trim();
+    if (!input) throw { code: "empty" };
+    const code = findImportCode(input);
+    if (!code) return { title: title || "", text: input };
+    const d = await decodeImport(code);
+    return { title: title || d.title, text: d.text };
+  }
+  function guessTitle(text) {
+    const first = String(text).split("\n").map((l) => l.replace(/^\s*#+\s*/, "").trim()).find(Boolean) || "";
+    return first.split(/\s+/).slice(0, 6).join(" ").slice(0, 60) || "Importiertes Skript";
+  }
+  async function importAny(input, title) {
+    const { title: t, text: x } = await resolveImport(input, title);
+    const name = String(t || "").trim().slice(0, 80) || guessTitle(x);
+    const same = sorted().find((s) => s.title === name);
+    if (same) {
+      same.text = x.slice(0, 2e5);
+      same.updatedAt = Date.now();
+      writeScript(same);
+      if (S.activeId === same.id) onActiveChanged();
+      else setActive(same.id, true);
+      pushPresence();
+      return same;
+    }
+    const sc = newScript(x.slice(0, 2e5));
+    sc.title = name;
+    sc.updatedAt = Date.now();
+    writeScript(sc);
+    renderEditor(true);
+    pushPresence();
+    return sc;
+  }
+  $("#btnImport").addEventListener("click", () => {
+    $("#importBox").hidden = false;
+    $("#importText").focus();
+  });
+  $("#importCancel").addEventListener("click", () => {
+    $("#importBox").hidden = true;
+    $("#importText").value = "";
+    $("#importState").textContent = "";
+  });
+  $("#importGo").addEventListener("click", async () => {
+    let sc;
+    try {
+      sc = await importAny($("#importText").value, "");
+    } catch (e) {
+      $("#importState").textContent = IMPORT_ERR[e && e.code] || "Erst einen Link oder Text einf\xFCgen.";
+      return;
+    }
+    $("#importBox").hidden = true;
+    $("#importText").value = "";
+    $("#importState").textContent = "";
+    setSaveState("Importiert: " + sc.title);
+  });
+  let received = null, pendingImport = null;
+  const rcState = (t) => {
+    const el = $("#rcState");
+    el.textContent = t;
+    el.classList.toggle("ok", t.charAt(0) === "\u2713");
+  };
+  function showReceive(d) {
+    received = d;
+    const w = wordCount(d.text);
+    $("#rcTitle").textContent = d.title || guessTitle(d.text);
+    $("#rcMeta").textContent = chaptersOf(d.text).length + " Kapitel \xB7 " + w + " W\xF6rter \xB7 ca. " + fmt(w / WPM * 60) + " Min";
+    $("#rcCode").value = P2P.target || "";
+    show("receive");
+    if (!P2P.on) {
+      $("#rcSend").disabled = true;
+      rcState("Senden geht hier nicht. \xD6ffne das Skript auf diesem Ger\xE4t.");
+      return;
+    }
+    if (P2P.target) sendReceived();
+    else rcState("Code vom iPad eingeben (steht dort auf der Startseite), dann \u201ESenden\u201C.");
+  }
+  function sendReceived() {
+    if (!received) return;
+    const code = $("#rcCode").value.replace(/\D/g, "");
+    if (code.length !== 4) {
+      rcState("Bitte den 4-stelligen Code vom iPad eingeben.");
+      return;
+    }
+    pendingImport = { title: String(received.title || "").slice(0, 80), text: received.text.slice(0, 2e5) };
+    if (P2P.rconn && P2P.rconn.open && P2P.target === code) {
+      flushPendingImport();
+      return;
+    }
+    rcState("Verbinde mit iPad " + code + " \u2026");
+    p2pConnect(code);
+  }
+  function flushPendingImport() {
+    if (!pendingImport || !(P2P.rconn && P2P.rconn.open)) return;
+    P2P.rconn.send({ type: "import", title: pendingImport.title, text: pendingImport.text });
+    pendingImport = null;
+    rcState("Gesendet, warte auf Best\xE4tigung vom iPad \u2026");
+  }
+  $("#rcSend").addEventListener("click", sendReceived);
+  $("#rcCode").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendReceived();
+  });
+  $("#rcLocal").addEventListener("click", () => {
+    if (!received) return;
+    importAny(received.text, received.title).then(() => go("prompter"), () => rcState("Das Skript konnte nicht angelegt werden."));
+  });
+  const VIEWS = ["home", "editor", "prompter", "remote", "receive"];
+  function go(v) {
+    const h = v === "home" ? "" : v;
+    if (location.hash.slice(1) === h) show(v);
+    else location.hash = h;
+  }
+  function route() {
+    const h = location.hash.slice(1);
+    if (STANDALONE && (h.startsWith("s=") || h.startsWith("i="))) {
+      try {
+        history.replaceState(null, "", location.pathname + location.search + "#receive");
+      } catch {
+      }
+      resolveImport("#i=" + h.slice(2), "").then(showReceive, (e) => {
+        show("home");
+        $("#homeStatus").textContent = IMPORT_ERR[e && e.code] || "Der Link konnte nicht gelesen werden.";
+      });
+      return;
+    }
+    if (h === "receive" && !received) {
+      show("home");
+      return;
+    }
+    show(VIEWS.includes(h) ? h : "home");
+  }
+  function show(v) {
+    const prev = S.view;
+    if (prev === "prompter" && v !== "prompter") {
+      setPlay(false);
+      cancelAnimationFrame(raf);
+      raf = 0;
+      wake(false);
+      if (db) writeStatus(true);
+      if (fsEl()) {
+        try {
+          (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        } catch {
+        }
+      }
+    }
+    if (prev === "editor" && dirty) saveNow();
+    S.view = v;
+    VIEWS.forEach((n) => {
+      $("#v-" + n).hidden = n !== v;
+    });
+    if (v === "editor") renderEditor(true);
+    if (v === "prompter") {
+      applySettings();
+      if (keyOf(activeScript()) !== builtFor) {
+        buildTrack();
+        S.pos = 0;
+      } else S.pos = clamp(S.pos, 0, maxPos());
+      S.target = null;
+      setPlay(false);
+      lastT = 0;
+      if (!raf) raf = requestAnimationFrame(loop);
+      wake(true);
+      renderHud();
+    }
+    if (v === "remote") {
+      rChKey = "";
+      renderRemote();
+    }
+    renderConn();
+    pushPresence(true);
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener("hashchange", route);
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-go]");
+    if (b) go(b.dataset.go);
+  });
+  $("#text").addEventListener("input", () => {
+    if (!activeScript()) {
+      const t = $("#text").value, sc = newScript(t);
+      $("#text").value = t;
+      if (t.trim().length > 20) {
+        sc.title = guessTitle(t);
+        $("#title").value = sc.title;
+      }
+    }
+    scheduleSave();
+    renderChapterList();
+    renderStats();
+  });
+  $("#text").addEventListener("keyup", renderChapterList);
+  $("#text").addEventListener("click", renderChapterList);
+  $("#title").addEventListener("input", () => {
+    if (!activeScript()) newScript("");
+    scheduleSave();
+  });
+  $("#title").addEventListener("change", saveNow);
+  $("#text").addEventListener("blur", saveNow);
+  $("#scriptSel").addEventListener("change", (e) => {
+    if (e.target.value) setActive(e.target.value, true);
+  });
+  $("#btnNew").addEventListener("click", () => {
+    newScript("");
+    $("#title").focus();
+    $("#title").select();
+  });
+  $("#btnDel").addEventListener("click", deleteActive);
+  $("#btnMark").addEventListener("click", insertMark);
+  $("#btnAuto").addEventListener("click", autoChapters);
+  $("#btnUndo").addEventListener("click", undoAuto);
+  for (const [id, k] of [["#setSize", "size"], ["#setSpeed", "speed"], ["#setMargin", "margin"], ["#setLine", "line"]])
+    $(id).addEventListener("input", (e) => setSetting(k, e.target.value));
+  $("#edMH").addEventListener("click", () => setSetting("mirrorH", !S.set.mirrorH));
+  $("#edMV").addEventListener("click", () => setSetting("mirrorV", !S.set.mirrorV));
+  $$(".seg [data-theme]").forEach((b) => b.addEventListener("click", () => setSetting("theme", b.dataset.theme)));
+  window.addEventListener("resize", () => {
+    if (S.view === "prompter") rebuildKeepPos();
+  });
+  if (bc) bc.onmessage = (e) => {
+    const d = e.data || {};
+    if (d.type === "cmd" && !room && !db) exec(String(d.cmd), d.value, "remote");
+    if (db) return;
+    if (d.type === "scripts") {
+      loadLocal();
+      onScriptsChanged();
+    }
+    if (d.type === "active" && S.scripts.has(d.id)) {
+      S.activeId = d.id;
+      LS.set("tp.active", d.id);
+      onActiveChanged();
+    }
+  };
+  function connectDb() {
+    S.scripts.clear();
+    db.collection("scripts").onSnapshot((snap) => {
+      snap.docChanges().forEach((ch) => {
+        if (ch.type === "removed") {
+          S.scripts.delete(ch.doc.id);
+          return;
+        }
+        const d = ch.doc.data() || {};
+        S.scripts.set(ch.doc.id, { id: ch.doc.id, title: String(d.title || "Ohne Titel"), text: String(d.text || ""), updatedAt: Number(d.updatedAt) || 0 });
+      });
+      onScriptsChanged();
+    }, (e) => console.warn("scripts", e));
+    db.doc("live/state").onSnapshot((s) => {
+      const d = s.exists ? s.data() : null;
+      if (d && d.scriptId && String(d.scriptId) !== S.activeId) {
+        S.activeId = String(d.scriptId);
+        LS.set("tp.active", S.activeId);
+        if (S.scripts.has(S.activeId)) onActiveChanged();
+      }
+    }, (e) => console.warn("state", e));
+    let first = true, lastSeq = 0;
+    db.doc("live/command").onSnapshot((s) => {
+      var _a;
+      const d = s.exists ? s.data() : null;
+      if (!d) {
+        first = false;
+        return;
+      }
+      const entries = (Array.isArray(d.queue) && d.queue.length ? d.queue : [d]).filter((e) => e && typeof e === "object" && isFinite(Number(e.seq))).sort((a, b) => Number(a.seq) - Number(b.seq));
+      const top = entries.reduce((m, e) => Math.max(m, Number(e.seq)), 0);
+      if (first) {
+        first = false;
+        lastSeq = top;
+        return;
+      }
+      const src = d.from === "remote" ? "remote" : "claude";
+      for (const e of entries) if (Number(e.seq) > lastSeq) exec(String(e.cmd || ""), (_a = e.value) != null ? _a : void 0, src);
+      lastSeq = Math.max(lastSeq, top);
+    }, (e) => console.warn("command", e));
+    db.doc("live/status").onSnapshot((s) => {
+      const d = s.exists ? s.data() : null;
+      dbStatus = d ? { p: d.p, at: Number(d.at) || 0 } : null;
+      renderRemote();
+    }, (e) => console.warn("status", e));
+  }
+  function connectRoom() {
+    room.on("cmd", (m) => {
+      const d = m.data;
+      if (d && typeof d === "object" && typeof d.cmd === "string") exec(d.cmd, d.value, "remote");
+    }, (e) => console.warn("room", e));
+    room.onPeers(() => {
+      renderRemote();
+      if (S.view === "prompter") renderHud();
+    });
+    room.onConnection(() => {
+      presKey = "";
+      pushPresence(true);
+      renderConn();
+      renderRemote();
+    });
+  }
+  async function boot() {
+    loadLocal();
+    if (!S.scripts.has(S.activeId)) {
+      const f = sorted()[0];
+      S.activeId = f ? f.id : null;
+    }
+    applySettings();
+    route();
+    const cl = window.claude;
+    if (cl && typeof cl.use === "function") {
+      const [d, r, sm] = await Promise.all([cl.use("db").catch(() => null), cl.use("room").catch(() => null), cl.use("sample").catch(() => null)]);
+      db = d;
+      room = r;
+      sample = sm;
+      $("#autoWrap").hidden = !sample;
+      if (db) connectDb();
+      if (room) connectRoom();
+    }
+    if (STANDALONE) {
+      $("#btnImport").hidden = false;
+      $("#tileRemote").textContent = "Handy oder zweites Tablet steuert den Prompter. Einmal mit dem Code vom iPad koppeln.";
+      $("#helpRemote").textContent = "Auf dem Handy dieselbe Adresse \xF6ffnen, \u201EFernbedienung\u201C w\xE4hlen und den 4-stelligen Code vom iPad eingeben. Beide Ger\xE4te brauchen daf\xFCr Internet (WLAN oder Hotspot). Skripte liegen nur auf dem iPad; neue kommen per Einf\xFCgen, per Fernbedienung oder per Import-Link von Claude.";
+      const ch = $("#helpClaude");
+      if (ch) ch.textContent = "Sag Claude \u201EMach mir einen Prompter-Import-Link f\xFCr das Skript aus Projekt \u2026\u201C. Claude holt den Text, setzt Kapitel und gibt dir einen Link. Den Link in der App unter \u201ESkript \u2192 Import-Link einf\xFCgen\u201C einf\xFCgen oder in der Fernbedienung an das iPad schicken.";
+      $("#rPair").hidden = $("#rSend").hidden = !P2P.on;
+      if (P2P.on) p2pStart();
+      try {
+        navigator.storage && navigator.storage.persist && navigator.storage.persist();
+      } catch {
+      }
+    }
+    booted = true;
+    renderConn();
+    renderCode();
+    renderEditor(false);
+    renderRemote();
+    pushPresence(true);
+  }
+  boot();
 })();
 </script>
 
