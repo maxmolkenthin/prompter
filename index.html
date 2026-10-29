@@ -18,6 +18,7 @@ body{margin:0}
 img{max-width:100%}
 </style>
 <script src="peerjs.min.js"></script>
+<script src="pako_inflate.min.js"></script>
 </head>
 <body>
 <title>Colada Prompter</title>
@@ -1101,9 +1102,9 @@ function onHostData(c, d) {
     else exec(d.cmd, d.value, 'remote');
   } else if (d.type === 'import') {
     importAny(String(d.text || ''), String(d.title || '')).then(sc => {
-      try { c.send({ type: 'imported', ok: !!sc, title: sc ? sc.title : '' }); } catch {}
-      if (sc && S.view === 'prompter') toast('Neues Skript: ' + sc.title);
-    });
+      try { c.send({ type: 'imported', ok: true, title: sc.title }); } catch {}
+      if (S.view === 'prompter') toast('Neues Skript: ' + sc.title);
+    }, e => { try { c.send({ type: 'imported', ok: false, reason: String((e && e.code) || '') }); } catch {} });
   }
 }
 function p2pConnect(code) {
@@ -1120,7 +1121,8 @@ function p2pConnect(code) {
   c.on('data', d => {
     if (P2P.rconn !== c || !d || typeof d !== 'object') return;
     if (d.type === 'state') { P2P.state = d; P2P.stateAt = Date.now(); renderRemote(); }
-    if (d.type === 'imported') $('#rSendState').textContent = d.ok ? 'Auf dem iPad angelegt: ' + String(d.title || '') : 'Das iPad konnte den Text nicht übernehmen.';
+    if (d.type === 'imported') $('#rSendState').textContent = d.ok ? 'Auf dem iPad angelegt: ' + String(d.title || '')
+      : 'Das iPad konnte den Text nicht übernehmen. ' + (IMPORT_ERR[d.reason] || '');
   });
   c.on('close', () => { if (P2P.rconn === c) { P2P.rconn = null; P2P.state = null; P2P.rstatus = 'closed'; renderRemote(); } });
   c.on('error', () => { if (P2P.rconn === c) { P2P.rstatus = 'closed'; renderRemote(); } });
@@ -1148,13 +1150,16 @@ function renderPair(p) {
 }
 $('#rConnect').addEventListener('click', () => p2pConnect($('#rCode').value));
 $('#rCode').addEventListener('keydown', e => { if (e.key === 'Enter') p2pConnect($('#rCode').value); });
-$('#rSendBtn').addEventListener('click', () => {
-  const text = $('#rSendText').value, title = $('#rSendTitle').value;
+$('#rSendBtn').addEventListener('click', async () => {
   const st = $('#rSendState');
-  if (!text.trim()) { st.textContent = 'Erst Text oder Import-Link einfügen.'; return; }
+  if (!$('#rSendText').value.trim()) { st.textContent = 'Erst Text oder Import-Link einfügen.'; return; }
   if (!(P2P.rconn && P2P.rconn.open)) { st.textContent = 'Nicht mit dem iPad verbunden.'; return; }
-  P2P.rconn.send({ type: 'import', text: text.slice(0, 200000), title: title.slice(0, 80) });
-  st.textContent = 'Gesendet …';
+  // Das Handy entpackt den Link selbst und schickt fertigen Text: das iPad muss nichts dekodieren.
+  let d;
+  try { d = await resolveImport($('#rSendText').value, $('#rSendTitle').value.trim()); }
+  catch (e) { st.textContent = IMPORT_ERR[e && e.code] || 'Der Link konnte nicht gelesen werden.'; return; }
+  P2P.rconn.send({ type: 'import', text: d.text.slice(0, 200000), title: String(d.title || '').slice(0, 80) });
+  st.textContent = 'Gesendet: ' + (d.title || guessTitle(d.text)) + ' …';
   $('#rSendText').value = ''; $('#rSendTitle').value = '';
 });
 
@@ -1166,26 +1171,47 @@ function b64urlBytes(s) {
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
 }
-async function decodeImport(code) {
-  const bytes = b64urlBytes(code);
+// Entpacken: pako (in der eigenständigen Version mitgeliefert, läuft auf jedem iPad),
+// sonst die eingebaute DecompressionStream (erst ab iOS 16.4).
+async function inflateRaw(bytes) {
+  if (window.pako && typeof window.pako.inflateRaw === 'function') return window.pako.inflateRaw(bytes, { to: 'string' });
+  if (typeof DecompressionStream !== 'function') throw { code: 'unsupported' };
   const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-  const obj = JSON.parse(await new Response(stream).text());
+  return new Response(stream).text();
+}
+async function decodeImport(code) {
+  let obj;
+  try { obj = JSON.parse(await inflateRaw(b64urlBytes(code))); }
+  catch (e) { throw { code: e && e.code === 'unsupported' ? 'unsupported' : 'incomplete' }; }
+  if (!obj || typeof obj !== 'object' || !String(obj.x || '').trim()) throw { code: 'incomplete' };
   return { title: String(obj.t || ''), text: String(obj.x || '') };
+}
+// Erkennt einen Import-Link auch mit Leerzeichen oder Zeilenumbrüchen, wie sie beim Kopieren entstehen.
+function findImportCode(input) {
+  const flat = String(input || '').replace(/\s+/g, '');
+  const m = flat.match(/(?:^|[#&?])i=([A-Za-z0-9_-]{8,})$/);
+  return m ? m[1] : null;
+}
+const IMPORT_ERR = {
+  incomplete: 'Der Link ist unvollständig. Bitte den ganzen Link kopieren, er ist sehr lang.',
+  unsupported: 'Dieses Gerät kann den Link nicht lesen. Füge stattdessen den Skripttext ein.'
+};
+// Liefert {title, text} oder wirft {code}; der Link wird schon hier geprüft (auch auf dem Handy).
+async function resolveImport(input, title) {
+  input = String(input || '').trim();
+  if (!input) throw { code: 'empty' };
+  const code = findImportCode(input);
+  if (!code) return { title: title || '', text: input };
+  const d = await decodeImport(code);
+  return { title: title || d.title, text: d.text };
 }
 function guessTitle(text) {
   const first = String(text).split('\n').map(l => l.replace(/^\s*#+\s*/, '').trim()).find(Boolean) || '';
   return first.split(/\s+/).slice(0, 6).join(' ').slice(0, 60) || 'Importiertes Skript';
 }
+// Legt das Skript an; wirft {code} wie resolveImport.
 async function importAny(input, title) {
-  input = String(input || '').trim();
-  if (!input) return null;
-  const m = input.match(/(?:^|[#&?])i=([A-Za-z0-9_-]{8,})\s*$/);
-  let t = title, x = input;
-  if (m) {
-    try { const d = await decodeImport(m[1]); t = t || d.title; x = d.text; }
-    catch { return null; }
-  }
-  if (!x.trim()) return null;
+  const { title: t, text: x } = await resolveImport(input, title);
   const sc = newScript(x.slice(0, 200000));
   sc.title = String(t || '').trim().slice(0, 80) || guessTitle(x);
   sc.updatedAt = Date.now();
@@ -1197,8 +1223,9 @@ async function importAny(input, title) {
 $('#btnImport').addEventListener('click', () => { $('#importBox').hidden = false; $('#importText').focus(); });
 $('#importCancel').addEventListener('click', () => { $('#importBox').hidden = true; $('#importText').value = ''; $('#importState').textContent = ''; });
 $('#importGo').addEventListener('click', async () => {
-  const sc = await importAny($('#importText').value, '');
-  if (!sc) { $('#importState').textContent = 'Das hat nicht geklappt. Ist der Link vollständig kopiert?'; return; }
+  let sc;
+  try { sc = await importAny($('#importText').value, ''); }
+  catch (e) { $('#importState').textContent = IMPORT_ERR[e && e.code] || 'Erst einen Link oder Text einfügen.'; return; }
   $('#importBox').hidden = true; $('#importText').value = ''; $('#importState').textContent = '';
   setSaveState('Importiert: ' + sc.title);
 });
@@ -1211,7 +1238,7 @@ function route() {
   if (STANDALONE && h.startsWith('i=')) {
     try { history.replaceState(null, '', location.pathname + location.search + '#editor'); } catch {}
     show('editor');
-    importAny(h, '').then(sc => setSaveState(sc ? 'Importiert: ' + sc.title : 'Import-Link ungültig oder unvollständig'));
+    importAny(h, '').then(sc => setSaveState('Importiert: ' + sc.title), () => setSaveState('Import-Link ungültig oder unvollständig'));
     return;
   }
   show(VIEWS.includes(h) ? h : 'home');

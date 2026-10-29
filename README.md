@@ -20,6 +20,7 @@ Fernbedienung: dieselbe Adresse auf dem Handy öffnen, „Fernbedienung“ wähl
 | `src/index.html` | Quelltext; dieselbe Datei läuft auch als claude.ai-Artifact |
 | `build.py`, `sw.template.js` | bauen die App: `python3 build.py` |
 | `peerjs.min.js` | PeerJS 1.5.4 (MIT) für die Direktverbindung |
+| `pako_inflate.min.js` | pako 2.1.0 (MIT/Zlib) zum Entpacken der Import-Links, auch auf älteren iPads |
 | `prompter-laden/SKILL.md` | Claude-Skill: Skript aus ClickUp/Drive holen, Kapitel setzen, laden |
 
 Skripte werden nur im Browser des jeweiligen Geräts gespeichert, nicht in diesem Repository.

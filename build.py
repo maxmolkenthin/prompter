@@ -3,7 +3,7 @@
 
 Aufruf: python3 build.py
 Erzeugt standalone/index.html, sw.js, manifest.webmanifest und die App-Symbole.
-peerjs.min.js liegt fest in standalone/ (MIT-Lizenz, Version 1.5.4).
+peerjs.min.js (PeerJS 1.5.4, MIT) und pako_inflate.min.js (pako 2.1.0, MIT/Zlib) liegen fest daneben.
 """
 import hashlib
 import json
@@ -40,6 +40,7 @@ body{margin:0}
 img{max-width:100%}
 </style>
 <script src="peerjs.min.js"></script>
+<script src="pako_inflate.min.js"></script>
 </head>
 <body>
 """
@@ -102,7 +103,8 @@ def main() -> None:
     (OUT / "manifest.webmanifest").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # Cache-Version aus dem Inhalt, damit jede neue Fassung den Offline-Speicher erneuert.
-    digest = hashlib.sha256((html + (OUT / "peerjs.min.js").read_text(encoding="utf-8")).encode()).hexdigest()[:10]
+    libs = "".join((OUT / f).read_text(encoding="utf-8") for f in ("peerjs.min.js", "pako_inflate.min.js"))
+    digest = hashlib.sha256((html + libs).encode()).hexdigest()[:10]
     sw = (ROOT / "sw.template.js").read_text(encoding="utf-8").replace("__VERSION__", digest)
     (OUT / "sw.js").write_text(sw, encoding="utf-8")
     print("gebaut:", digest)
