@@ -24,6 +24,6 @@ Fernbedienung: dieselbe Adresse auf dem Handy öffnen, „Fernbedienung“ wähl
 
 ## Skript aufs iPad bringen
 
-Claude erzeugt einen Link (`…/prompter/#s=…`). Den Link auf dem Handy antippen: Die Seite „Skript empfangen“ schickt das Skript automatisch an das zuletzt gekoppelte iPad. Beim ersten Mal einmal den 4-stelligen Code vom iPad eingeben.
+Claude erzeugt einen Link (`…/prompter/#s=…` für ein Skript, `…/prompter/#p=…` für ein ganzes Drehpaket). Den Link auf dem Handy antippen: Die Seite „Skript empfangen“ schickt alles automatisch an das zuletzt gekoppelte iPad. Beim ersten Mal einmal den 4-stelligen Code vom iPad eingeben. Am Set wird über „Film wählen“ auf der Fernbedienung oder die Auswahl in der Prompter-Leiste gewechselt.
 
 Skripte werden nur im Browser des jeweiligen Geräts gespeichert, nicht in diesem Repository.

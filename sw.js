@@ -1,7 +1,7 @@
 // Offline-Speicher für die eigenständige Version. Eigene Dateien: erst Netz (am Browser-
 // Zwischenspeicher vorbei, damit nach einem Update nie alte Dateien kommen), sonst Cache.
 // Schriften von Google: erst Cache, sonst Netz.
-const V = '7f52fc618c';
+const V = '2da3581ade';
 const CACHE = 'colada-prompter-' + V;
 const ASSETS = ['./', './index.html', './peerjs.min.js?v=' + V, './pako_inflate.min.js?v=' + V,
   './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];

@@ -26,8 +26,8 @@ window.addEventListener('error', function (e) {
   else if (e && e.message) window.__bootErrors.push(e.message + ' (' + String(e.filename || '').split('/').pop().split('?')[0] + ')');
 }, true);
 </script>
-<script src="peerjs.min.js?v=7f52fc618c"></script>
-<script src="pako_inflate.min.js?v=7f52fc618c"></script>
+<script src="peerjs.min.js?v=2da3581ade"></script>
+<script src="pako_inflate.min.js?v=2da3581ade"></script>
 </head>
 <body>
 <title>Colada Prompter</title>
@@ -175,6 +175,10 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
 .auto{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .auto-state{font-size:14px;color:var(--muted)}
 .auto-state.err{color:#ff8f7a}
+.ctrl select{max-width:15em;min-height:44px}
+.films button{min-height:52px;font-size:16px;font-weight:700}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:22px;height:22px;accent-color:var(--tally)}
 #rcState.ok{color:#dcffee;background:#1d3a2d;border:1px solid var(--ok);border-radius:10px;padding:10px 12px;font-size:16px}
 .stepper{display:grid;grid-template-columns:56px 1fr 56px;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px}
 .stepper button{font-size:22px;padding:0}
@@ -320,6 +324,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
   </div>
   <div class="ctrl" id="ctrl">
     <button data-c="close">✕ Schließen</button>
+    <select id="pScript" aria-label="Film wählen"></select>
     <div class="grp">
       <button data-c="prev" aria-label="Kapitel zurück"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg></button>
       <button data-c="toggle" class="play" id="pPlay" aria-label="Start oder Pause"></button>
@@ -358,6 +363,10 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
       <div class="r-meta mono"><span id="rPct"></span><span id="rRemain"></span></div>
       <div id="rSrc" class="status"></div>
     </div>
+    <div class="card" id="rScriptWrap" hidden>
+      <h3>Film wählen</h3>
+      <ol id="rScripts" class="chlist films"></ol>
+    </div>
     <div class="r-main">
       <button data-r="prev"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg>Kapitel zurück</button>
       <button data-r="toggle" id="rPlay"></button>
@@ -377,10 +386,6 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
     <div class="r-row">
       <button data-r="mirrorH" id="rMH" aria-pressed="false">⇋ Horizontal spiegeln</button>
       <button data-r="mirrorV" id="rMV" aria-pressed="false">⇅ Vertikal spiegeln</button>
-    </div>
-    <div class="r-script" id="rScriptWrap">
-      <h3><label for="rScript">Skript auf dem Prompter</label></h3>
-      <select id="rScript"></select>
     </div>
     <div class="card">
       <h3>Kapitel antippen zum Springen</h3>
@@ -406,6 +411,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
       <h3>Skript empfangen</h3>
       <div id="rcTitle" class="r-title">–</div>
       <div id="rcMeta" class="muted mono"></div>
+      <ol id="rcList" class="chlist" hidden></ol>
     </div>
     <div class="card">
       <h3><label for="rcCode">An das iPad im Teleprompter senden</label></h3>
@@ -413,6 +419,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
         <input id="rcCode" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="1234">
         <button id="rcSend" class="primary">Senden</button>
       </div>
+      <label class="chk" id="rcReplaceWrap" hidden><input type="checkbox" id="rcReplace"> Andere Skripte auf dem iPad dabei entfernen</label>
       <p id="rcState" class="empty-note" role="status"></p>
     </div>
     <button id="rcLocal">Auf diesem Gerät im Prompter öffnen</button>
@@ -488,6 +495,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
   }
   const sorted = () => [...S.scripts.values()].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   const activeScript = () => S.scripts.get(S.activeId) || null;
+  const byTitle = () => [...S.scripts.values()].sort((a, b) => String(a.title).localeCompare(String(b.title), "de", { numeric: true }));
   function loadLocal() {
     S.scripts.clear();
     const o = LS.get("tp.scripts", {});
@@ -671,8 +679,8 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
     $$("[data-theme]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.theme === s.theme));
   }
   function renderScriptSelects() {
-    const list = sorted();
-    for (const sel of P2P.on ? [$("#scriptSel")] : [$("#scriptSel"), $("#rScript")]) {
+    const list = byTitle();
+    for (const sel of [$("#scriptSel"), $("#pScript")]) {
       sel.textContent = "";
       if (!list.length) {
         const o = new Option("Noch kein Skript", "");
@@ -1336,18 +1344,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
       src.dataset.s = "sync";
       src.textContent = "\xDCber Speicher verbunden \xB7 Stand vor " + (age < 60 ? age + " s" : fmt(age) + " Min");
     }
-    if (P2P.on) {
-      const list = P2P.rconn && P2P.rconn.open && P2P.state && Array.isArray(P2P.state.scripts) ? P2P.state.scripts : [];
-      $("#rScriptWrap").hidden = !list.length;
-      const key2 = JSON.stringify(list) + "|" + (P2P.state && P2P.state.active);
-      const sel = $("#rScript");
-      if (sel.dataset.key !== key2) {
-        sel.dataset.key = key2;
-        sel.textContent = "";
-        for (const s of list) if (s && typeof s === "object") sel.add(new Option(String(s.title || "Ohne Titel"), String(s.id)));
-        sel.value = String(P2P.state && P2P.state.active || "");
-      }
-    } else $("#rScriptWrap").hidden = !db || S.scripts.size === 0;
+    renderFilmList();
     const key = chs.join("") + "|" + ci;
     if (key !== rChKey) {
       rChKey = key;
@@ -1373,10 +1370,38 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
   setInterval(() => {
     if (S.view === "remote") renderRemote();
   }, 1e3);
-  $("#rScript").addEventListener("change", (e) => {
-    if (!e.target.value) return;
-    if (P2P.on) send("script", e.target.value);
-    else setActive(e.target.value, true);
+  let filmKey = "";
+  function renderFilmList() {
+    let list, active;
+    if (P2P.on) {
+      const st = P2P.rconn && P2P.rconn.open && P2P.state;
+      list = st && Array.isArray(st.scripts) ? st.scripts.filter((x) => x && typeof x === "object") : [];
+      active = st ? String(st.active || "") : "";
+    } else {
+      list = db ? byTitle().map((x) => ({ id: x.id, title: x.title })) : [];
+      active = S.activeId || "";
+    }
+    $("#rScriptWrap").hidden = list.length < 2;
+    const key = JSON.stringify(list) + "|" + active;
+    if (key === filmKey) return;
+    filmKey = key;
+    const ol = $("#rScripts");
+    ol.textContent = "";
+    for (const f of list) {
+      const li = document.createElement("li");
+      if (String(f.id) === active) li.className = "on";
+      const b = document.createElement("button");
+      b.textContent = String(f.title || "Ohne Titel");
+      b.addEventListener("click", () => {
+        if (P2P.on) send("script", String(f.id));
+        else setActive(String(f.id), true);
+      });
+      li.append(b);
+      ol.append(li);
+    }
+  }
+  $("#pScript").addEventListener("change", (e) => {
+    if (e.target.value) setActive(e.target.value, true);
   });
   const PEER_PREFIX = "colada-prompter-v1-";
   function p2pStart() {
@@ -1462,7 +1487,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
       type: "state",
       p: p || null,
       active: S.activeId || "",
-      scripts: sorted().slice(0, 40).map((s) => ({ id: s.id, title: String(s.title || "").slice(0, 80) }))
+      scripts: byTitle().slice(0, 40).map((s) => ({ id: s.id, title: String(s.title || "").slice(0, 80) }))
     };
     const key = JSON.stringify(msg);
     if (key === P2P.sentKey) return;
@@ -1484,7 +1509,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
     } else if (d.type === "import") {
       importAny(String(d.text || ""), String(d.title || "")).then((sc) => {
         try {
-          c.send({ type: "imported", ok: true, title: sc.title });
+          c.send({ type: "imported", ok: true, title: sc.title, count: 1 });
         } catch {
         }
         if (S.view === "prompter") toast("Neues Skript: " + sc.title);
@@ -1494,6 +1519,14 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
         } catch {
         }
       });
+    } else if (d.type === "importMany" && Array.isArray(d.items)) {
+      const items = d.items.filter((i) => i && typeof i === "object").map((i) => ({ title: String(i.title || ""), text: String(i.text || "") }));
+      const first = importMany(items, !!d.replace);
+      try {
+        c.send({ type: "imported", ok: !!first, title: first ? first.title : "", count: items.length, pkg: String(d.pkg || "") });
+      } catch {
+      }
+      if (first && S.view === "prompter") toast(items.length + " Filme geladen");
     }
   }
   function p2pConnect(code) {
@@ -1541,7 +1574,8 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
         renderRemote();
       }
       if (d.type === "imported") {
-        const msg = d.ok ? "\u2713 Auf dem iPad angelegt: " + String(d.title || "") + ". Es ist dort jetzt das aktive Skript." : "Das iPad konnte den Text nicht \xFCbernehmen. " + (IMPORT_ERR[d.reason] || "");
+        const n = Number(d.count) || 1;
+        const msg = !d.ok ? "Das iPad konnte den Text nicht \xFCbernehmen. " + (IMPORT_ERR[d.reason] || "") : n > 1 ? "\u2713 " + n + " Filme auf dem iPad. Aktiv ist jetzt: " + String(d.title || "") + ". Wechseln unter \u201EFilm w\xE4hlen\u201C." : "\u2713 Auf dem iPad angelegt: " + String(d.title || "") + ". Es ist dort jetzt das aktive Skript.";
         $("#rSendState").textContent = msg;
         if (S.view === "receive") rcState(msg);
       }
@@ -1627,6 +1661,11 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
     } catch (e) {
       throw { code: e && e.code === "unsupported" ? "unsupported" : "incomplete" };
     }
+    if (obj && Array.isArray(obj.s)) {
+      const items = obj.s.filter((i) => i && String(i.x || "").trim()).map((i) => ({ title: String(i.t || ""), text: String(i.x) }));
+      if (!items.length) throw { code: "incomplete" };
+      return { pkg: String(obj.n || ""), items };
+    }
     if (!obj || typeof obj !== "object" || !String(obj.x || "").trim()) throw { code: "incomplete" };
     return { title: String(obj.t || ""), text: String(obj.x || "") };
   }
@@ -1645,32 +1684,53 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
     const code = findImportCode(input);
     if (!code) return { title: title || "", text: input };
     const d = await decodeImport(code);
+    if (d.items) return d;
     return { title: title || d.title, text: d.text };
   }
   function guessTitle(text) {
     const first = String(text).split("\n").map((l) => l.replace(/^\s*#+\s*/, "").trim()).find(Boolean) || "";
     return first.split(/\s+/).slice(0, 6).join(" ").slice(0, 60) || "Importiertes Skript";
   }
-  async function importAny(input, title) {
-    const { title: t, text: x } = await resolveImport(input, title);
-    const name = String(t || "").trim().slice(0, 80) || guessTitle(x);
-    const same = sorted().find((s) => s.title === name);
-    if (same) {
-      same.text = x.slice(0, 2e5);
-      same.updatedAt = Date.now();
-      writeScript(same);
-      if (S.activeId === same.id) onActiveChanged();
-      else setActive(same.id, true);
-      pushPresence();
-      return same;
+  function upsertScript(title, text) {
+    const name = String(title || "").trim().slice(0, 80) || guessTitle(text);
+    let sc = byTitle().find((x) => x.title === name);
+    if (!sc) {
+      if (dirty) saveNow();
+      const id = "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      sc = { id, title: name, text: "", updatedAt: 0 };
+      S.scripts.set(id, sc);
     }
-    const sc = newScript(x.slice(0, 2e5));
-    sc.title = name;
+    sc.text = String(text).slice(0, 2e5);
     sc.updatedAt = Date.now();
     writeScript(sc);
+    return sc;
+  }
+  function removeScript(id) {
+    S.scripts.delete(id);
+    if (db) saveQ = saveQ.then(() => db.doc("scripts/" + id).delete()).catch(() => {
+    });
+    else saveLocal();
+  }
+  function importMany(items, replace) {
+    items = items.filter((i) => String(i.text || "").trim());
+    if (!items.length) return null;
+    const done = items.map((i) => upsertScript(i.title, i.text));
+    if (replace) {
+      const keep = new Set(done.map((x) => x.id));
+      [...S.scripts.keys()].forEach((id) => {
+        if (!keep.has(id)) removeScript(id);
+      });
+    }
+    if (S.activeId === done[0].id) onActiveChanged();
+    else setActive(done[0].id, true);
     renderEditor(true);
     pushPresence();
-    return sc;
+    return done[0];
+  }
+  async function importAny(input, title) {
+    const r = await resolveImport(input, title);
+    if (r.items) return importMany(r.items, false);
+    return importMany([{ title: r.title, text: r.text }], false);
   }
   $("#btnImport").addEventListener("click", () => {
     $("#importBox").hidden = false;
@@ -1701,10 +1761,25 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
     el.classList.toggle("ok", t.charAt(0) === "\u2713");
   };
   function showReceive(d) {
-    received = d;
-    const w = wordCount(d.text);
-    $("#rcTitle").textContent = d.title || guessTitle(d.text);
-    $("#rcMeta").textContent = chaptersOf(d.text).length + " Kapitel \xB7 " + w + " W\xF6rter \xB7 ca. " + fmt(w / WPM * 60) + " Min";
+    received = d.items ? { pkg: d.pkg, items: d.items } : { pkg: "", items: [{ title: d.title, text: d.text }] };
+    const items = received.items, multi = items.length > 1;
+    const w = items.reduce((n, i) => n + wordCount(i.text), 0);
+    $("#rcTitle").textContent = multi ? received.pkg || "Drehpaket" : items[0].title || guessTitle(items[0].text);
+    $("#rcMeta").textContent = multi ? items.length + " Filme \xB7 " + w + " W\xF6rter \xB7 ca. " + fmt(w / WPM * 60) + " Min Sprechzeit" : chaptersOf(items[0].text).length + " Kapitel \xB7 " + w + " W\xF6rter \xB7 ca. " + fmt(w / WPM * 60) + " Min";
+    const ol = $("#rcList");
+    ol.textContent = "";
+    ol.hidden = !multi;
+    items.forEach((i) => {
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.disabled = true;
+      b.textContent = (i.title || guessTitle(i.text)) + " \xB7 " + chaptersOf(i.text).length + " Kapitel";
+      li.append(b);
+      ol.append(li);
+    });
+    $("#rcReplaceWrap").hidden = !multi;
+    $("#rcSend").textContent = multi ? "Alle senden" : "Senden";
+    $("#rcLocal").textContent = multi ? "Alle auf diesem Ger\xE4t \xF6ffnen" : "Auf diesem Ger\xE4t im Prompter \xF6ffnen";
     $("#rcCode").value = P2P.target || "";
     show("receive");
     if (!P2P.on) {
@@ -1722,7 +1797,11 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
       rcState("Bitte den 4-stelligen Code vom iPad eingeben.");
       return;
     }
-    pendingImport = { title: String(received.title || "").slice(0, 80), text: received.text.slice(0, 2e5) };
+    pendingImport = {
+      pkg: String(received.pkg || "").slice(0, 80),
+      replace: $("#rcReplace").checked,
+      items: received.items.map((i) => ({ title: String(i.title || "").slice(0, 80), text: String(i.text).slice(0, 2e5) }))
+    };
     if (P2P.rconn && P2P.rconn.open && P2P.target === code) {
       flushPendingImport();
       return;
@@ -1732,7 +1811,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
   }
   function flushPendingImport() {
     if (!pendingImport || !(P2P.rconn && P2P.rconn.open)) return;
-    P2P.rconn.send({ type: "import", title: pendingImport.title, text: pendingImport.text });
+    P2P.rconn.send({ type: "importMany", pkg: pendingImport.pkg, replace: pendingImport.replace, items: pendingImport.items });
     pendingImport = null;
     rcState("Gesendet, warte auf Best\xE4tigung vom iPad \u2026");
   }
@@ -1742,7 +1821,8 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
   });
   $("#rcLocal").addEventListener("click", () => {
     if (!received) return;
-    importAny(received.text, received.title).then(() => go("prompter"), () => rcState("Das Skript konnte nicht angelegt werden."));
+    if (importMany(received.items, $("#rcReplace").checked)) go("prompter");
+    else rcState("Das Skript konnte nicht angelegt werden.");
   });
   const VIEWS = ["home", "editor", "prompter", "remote", "receive"];
   function go(v) {
@@ -1752,7 +1832,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
   }
   function route() {
     const h = location.hash.slice(1);
-    if (STANDALONE && (h.startsWith("s=") || h.startsWith("i="))) {
+    if (STANDALONE && /^[spi]=/.test(h)) {
       try {
         history.replaceState(null, "", location.pathname + location.search + "#receive");
       } catch {
@@ -2008,7 +2088,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
 
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js?v=7f52fc618c').catch(() => {}));
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js?v=2da3581ade').catch(() => {}));
 }
 </script>
 </body>

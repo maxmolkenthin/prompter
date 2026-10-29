@@ -143,6 +143,10 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
 .auto{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .auto-state{font-size:14px;color:var(--muted)}
 .auto-state.err{color:#ff8f7a}
+.ctrl select{max-width:15em;min-height:44px}
+.films button{min-height:52px;font-size:16px;font-weight:700}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:22px;height:22px;accent-color:var(--tally)}
 #rcState.ok{color:#dcffee;background:#1d3a2d;border:1px solid var(--ok);border-radius:10px;padding:10px 12px;font-size:16px}
 .stepper{display:grid;grid-template-columns:56px 1fr 56px;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px}
 .stepper button{font-size:22px;padding:0}
@@ -288,6 +292,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
   </div>
   <div class="ctrl" id="ctrl">
     <button data-c="close">✕ Schließen</button>
+    <select id="pScript" aria-label="Film wählen"></select>
     <div class="grp">
       <button data-c="prev" aria-label="Kapitel zurück"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg></button>
       <button data-c="toggle" class="play" id="pPlay" aria-label="Start oder Pause"></button>
@@ -326,6 +331,10 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
       <div class="r-meta mono"><span id="rPct"></span><span id="rRemain"></span></div>
       <div id="rSrc" class="status"></div>
     </div>
+    <div class="card" id="rScriptWrap" hidden>
+      <h3>Film wählen</h3>
+      <ol id="rScripts" class="chlist films"></ol>
+    </div>
     <div class="r-main">
       <button data-r="prev"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg>Kapitel zurück</button>
       <button data-r="toggle" id="rPlay"></button>
@@ -345,10 +354,6 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
     <div class="r-row">
       <button data-r="mirrorH" id="rMH" aria-pressed="false">⇋ Horizontal spiegeln</button>
       <button data-r="mirrorV" id="rMV" aria-pressed="false">⇅ Vertikal spiegeln</button>
-    </div>
-    <div class="r-script" id="rScriptWrap">
-      <h3><label for="rScript">Skript auf dem Prompter</label></h3>
-      <select id="rScript"></select>
     </div>
     <div class="card">
       <h3>Kapitel antippen zum Springen</h3>
@@ -374,6 +379,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
       <h3>Skript empfangen</h3>
       <div id="rcTitle" class="r-title">–</div>
       <div id="rcMeta" class="muted mono"></div>
+      <ol id="rcList" class="chlist" hidden></ol>
     </div>
     <div class="card">
       <h3><label for="rcCode">An das iPad im Teleprompter senden</label></h3>
@@ -381,6 +387,7 @@ kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px
         <input id="rcCode" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="1234">
         <button id="rcSend" class="primary">Senden</button>
       </div>
+      <label class="chk" id="rcReplaceWrap" hidden><input type="checkbox" id="rcReplace"> Andere Skripte auf dem iPad dabei entfernen</label>
       <p id="rcState" class="empty-note" role="status"></p>
     </div>
     <button id="rcLocal">Auf diesem Gerät im Prompter öffnen</button>
@@ -431,6 +438,7 @@ try { bc = new BroadcastChannel('colada-prompter'); } catch {}
 /* ---------- Skripte: Speicher ---------- */
 const sorted = () => [...S.scripts.values()].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 const activeScript = () => S.scripts.get(S.activeId) || null;
+const byTitle = () => [...S.scripts.values()].sort((a, b) => String(a.title).localeCompare(String(b.title), 'de', { numeric: true }));
 
 function loadLocal() {
   S.scripts.clear();
@@ -574,8 +582,8 @@ function applySettings() {
 
 /* ---------- Skript-Editor ---------- */
 function renderScriptSelects() {
-  const list = sorted();
-  for (const sel of P2P.on ? [$('#scriptSel')] : [$('#scriptSel'), $('#rScript')]) {
+  const list = byTitle();
+  for (const sel of [$('#scriptSel'), $('#pScript')]) {
     sel.textContent = '';
     if (!list.length) { const o = new Option('Noch kein Skript', ''); sel.add(o); sel.disabled = true; continue; }
     sel.disabled = false;
@@ -1036,17 +1044,7 @@ function renderRemote() {
     src.dataset.s = 'sync';
     src.textContent = 'Über Speicher verbunden · Stand vor ' + (age < 60 ? age + ' s' : fmt(age) + ' Min');
   }
-  if (P2P.on) {
-    const list = P2P.rconn && P2P.rconn.open && P2P.state && Array.isArray(P2P.state.scripts) ? P2P.state.scripts : [];
-    $('#rScriptWrap').hidden = !list.length;
-    const key = JSON.stringify(list) + '|' + (P2P.state && P2P.state.active);
-    const sel = $('#rScript');
-    if (sel.dataset.key !== key) {
-      sel.dataset.key = key; sel.textContent = '';
-      for (const s of list) if (s && typeof s === 'object') sel.add(new Option(String(s.title || 'Ohne Titel'), String(s.id)));
-      sel.value = String(P2P.state && P2P.state.active || '');
-    }
-  } else $('#rScriptWrap').hidden = !db || S.scripts.size === 0;
+  renderFilmList();
   const key = chs.join('\u0001') + '|' + ci;
   if (key !== rChKey) {
     rChKey = key;
@@ -1066,10 +1064,31 @@ $('#v-remote').addEventListener('click', e => {
   send(b.dataset.r);
 });
 setInterval(() => { if (S.view === 'remote') renderRemote(); }, 1000);
-$('#rScript').addEventListener('change', e => {
-  if (!e.target.value) return;
-  if (P2P.on) send('script', e.target.value); else setActive(e.target.value, true);
-});
+// Filme als große Knöpfe: Quelle ist das gekoppelte iPad (eigenständig) oder der Cloud-Speicher.
+let filmKey = '';
+function renderFilmList() {
+  let list, active;
+  if (P2P.on) {
+    const st = P2P.rconn && P2P.rconn.open && P2P.state;
+    list = st && Array.isArray(st.scripts) ? st.scripts.filter(x => x && typeof x === 'object') : [];
+    active = st ? String(st.active || '') : '';
+  } else {
+    list = db ? byTitle().map(x => ({ id: x.id, title: x.title })) : [];
+    active = S.activeId || '';
+  }
+  $('#rScriptWrap').hidden = list.length < 2;
+  const key = JSON.stringify(list) + '|' + active;
+  if (key === filmKey) return;
+  filmKey = key;
+  const ol = $('#rScripts'); ol.textContent = '';
+  for (const f of list) {
+    const li = document.createElement('li'); if (String(f.id) === active) li.className = 'on';
+    const b = document.createElement('button'); b.textContent = String(f.title || 'Ohne Titel');
+    b.addEventListener('click', () => { if (P2P.on) send('script', String(f.id)); else setActive(String(f.id), true); });
+    li.append(b); ol.append(li);
+  }
+}
+$('#pScript').addEventListener('change', e => { if (e.target.value) setActive(e.target.value, true); });
 
 /* ---------- Direktverbindung (nur eigenständige Version) ----------
    Jedes Gerät meldet sich beim PeerJS-Kopplungsdienst unter einem 4-stelligen Code an.
@@ -1120,7 +1139,7 @@ function renderCode() {
 function p2pBroadcast(p) {
   if (!P2P.on || !P2P.conns.size) return;
   const msg = { type: 'state', p: p || null, active: S.activeId || '',
-    scripts: sorted().slice(0, 40).map(s => ({ id: s.id, title: String(s.title || '').slice(0, 80) })) };
+    scripts: byTitle().slice(0, 40).map(s => ({ id: s.id, title: String(s.title || '').slice(0, 80) })) };
   const key = JSON.stringify(msg);
   if (key === P2P.sentKey) return;
   P2P.sentKey = key;
@@ -1133,9 +1152,14 @@ function onHostData(c, d) {
     else exec(d.cmd, d.value, 'remote');
   } else if (d.type === 'import') {
     importAny(String(d.text || ''), String(d.title || '')).then(sc => {
-      try { c.send({ type: 'imported', ok: true, title: sc.title }); } catch {}
+      try { c.send({ type: 'imported', ok: true, title: sc.title, count: 1 }); } catch {}
       if (S.view === 'prompter') toast('Neues Skript: ' + sc.title);
     }, e => { try { c.send({ type: 'imported', ok: false, reason: String((e && e.code) || '') }); } catch {} });
+  } else if (d.type === 'importMany' && Array.isArray(d.items)) {
+    const items = d.items.filter(i => i && typeof i === 'object').map(i => ({ title: String(i.title || ''), text: String(i.text || '') }));
+    const first = importMany(items, !!d.replace);
+    try { c.send({ type: 'imported', ok: !!first, title: first ? first.title : '', count: items.length, pkg: String(d.pkg || '') }); } catch {}
+    if (first && S.view === 'prompter') toast(items.length + ' Filme geladen');
   }
 }
 function p2pConnect(code) {
@@ -1154,8 +1178,10 @@ function p2pConnect(code) {
     if (P2P.rconn !== c || !d || typeof d !== 'object') return;
     if (d.type === 'state') { P2P.state = d; P2P.stateAt = Date.now(); renderRemote(); }
     if (d.type === 'imported') {
-      const msg = d.ok ? '✓ Auf dem iPad angelegt: ' + String(d.title || '') + '. Es ist dort jetzt das aktive Skript.'
-        : 'Das iPad konnte den Text nicht übernehmen. ' + (IMPORT_ERR[d.reason] || '');
+      const n = Number(d.count) || 1;
+      const msg = !d.ok ? 'Das iPad konnte den Text nicht übernehmen. ' + (IMPORT_ERR[d.reason] || '')
+        : n > 1 ? '✓ ' + n + ' Filme auf dem iPad. Aktiv ist jetzt: ' + String(d.title || '') + '. Wechseln unter „Film wählen“.'
+        : '✓ Auf dem iPad angelegt: ' + String(d.title || '') + '. Es ist dort jetzt das aktive Skript.';
       $('#rSendState').textContent = msg;
       if (S.view === 'receive') rcState(msg);
     }
@@ -1219,6 +1245,12 @@ async function decodeImport(code) {
   let obj;
   try { obj = JSON.parse(await inflateRaw(b64urlBytes(code))); }
   catch (e) { throw { code: e && e.code === 'unsupported' ? 'unsupported' : 'incomplete' }; }
+  if (obj && Array.isArray(obj.s)) {
+    // Drehpaket: mehrere Filme in einem Link
+    const items = obj.s.filter(i => i && String(i.x || '').trim()).map(i => ({ title: String(i.t || ''), text: String(i.x) }));
+    if (!items.length) throw { code: 'incomplete' };
+    return { pkg: String(obj.n || ''), items };
+  }
   if (!obj || typeof obj !== 'object' || !String(obj.x || '').trim()) throw { code: 'incomplete' };
   return { title: String(obj.t || ''), text: String(obj.x || '') };
 }
@@ -1239,32 +1271,48 @@ async function resolveImport(input, title) {
   const code = findImportCode(input);
   if (!code) return { title: title || '', text: input };
   const d = await decodeImport(code);
+  if (d.items) return d;
   return { title: title || d.title, text: d.text };
 }
 function guessTitle(text) {
   const first = String(text).split('\n').map(l => l.replace(/^\s*#+\s*/, '').trim()).find(Boolean) || '';
   return first.split(/\s+/).slice(0, 6).join(' ').slice(0, 60) || 'Importiertes Skript';
 }
-// Legt das Skript an; wirft {code} wie resolveImport.
-async function importAny(input, title) {
-  const { title: t, text: x } = await resolveImport(input, title);
-  const name = String(t || '').trim().slice(0, 80) || guessTitle(x);
-  // Gleicher Titel: vorhandenes Skript aktualisieren statt doppelt anlegen.
-  const same = sorted().find(s => s.title === name);
-  if (same) {
-    same.text = x.slice(0, 200000); same.updatedAt = Date.now();
-    writeScript(same);
-    if (S.activeId === same.id) onActiveChanged(); else setActive(same.id, true);
-    pushPresence();
-    return same;
+// Legt ein Skript an oder aktualisiert es (gleicher Titel), ohne es aktiv zu setzen.
+function upsertScript(title, text) {
+  const name = String(title || '').trim().slice(0, 80) || guessTitle(text);
+  let sc = byTitle().find(x => x.title === name);
+  if (!sc) {
+    if (dirty) saveNow();
+    const id = 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    sc = { id, title: name, text: '', updatedAt: 0 };
+    S.scripts.set(id, sc);
   }
-  const sc = newScript(x.slice(0, 200000));
-  sc.title = name;
-  sc.updatedAt = Date.now();
+  sc.text = String(text).slice(0, 200000); sc.updatedAt = Date.now();
   writeScript(sc);
-  renderEditor(true);
-  pushPresence();
   return sc;
+}
+function removeScript(id) {
+  S.scripts.delete(id);
+  if (db) saveQ = saveQ.then(() => db.doc('scripts/' + id).delete()).catch(() => {});
+  else saveLocal();
+}
+// Drehpaket übernehmen: alle Filme anlegen/aktualisieren, auf Wunsch alles andere entfernen,
+// danach den ersten Film aktiv setzen.
+function importMany(items, replace) {
+  items = items.filter(i => String(i.text || '').trim());
+  if (!items.length) return null;
+  const done = items.map(i => upsertScript(i.title, i.text));
+  if (replace) { const keep = new Set(done.map(x => x.id)); [...S.scripts.keys()].forEach(id => { if (!keep.has(id)) removeScript(id); }); }
+  if (S.activeId === done[0].id) onActiveChanged(); else setActive(done[0].id, true);
+  renderEditor(true); pushPresence();
+  return done[0];
+}
+// Legt Skript oder Paket aus Link oder Text an und setzt es aktiv; wirft {code} wie resolveImport.
+async function importAny(input, title) {
+  const r = await resolveImport(input, title);
+  if (r.items) return importMany(r.items, false);
+  return importMany([{ title: r.title, text: r.text }], false);
 }
 $('#btnImport').addEventListener('click', () => { $('#importBox').hidden = false; $('#importText').focus(); });
 $('#importCancel').addEventListener('click', () => { $('#importBox').hidden = true; $('#importText').value = ''; $('#importState').textContent = ''; });
@@ -1282,10 +1330,19 @@ $('#importGo').addEventListener('click', async () => {
 let received = null, pendingImport = null;
 const rcState = t => { const el = $('#rcState'); el.textContent = t; el.classList.toggle('ok', t.charAt(0) === '✓'); };
 function showReceive(d) {
-  received = d;
-  const w = wordCount(d.text);
-  $('#rcTitle').textContent = d.title || guessTitle(d.text);
-  $('#rcMeta').textContent = chaptersOf(d.text).length + ' Kapitel · ' + w + ' Wörter · ca. ' + fmt(w / WPM * 60) + ' Min';
+  received = d.items ? { pkg: d.pkg, items: d.items } : { pkg: '', items: [{ title: d.title, text: d.text }] };
+  const items = received.items, multi = items.length > 1;
+  const w = items.reduce((n, i) => n + wordCount(i.text), 0);
+  $('#rcTitle').textContent = multi ? (received.pkg || 'Drehpaket') : (items[0].title || guessTitle(items[0].text));
+  $('#rcMeta').textContent = multi
+    ? items.length + ' Filme · ' + w + ' Wörter · ca. ' + fmt(w / WPM * 60) + ' Min Sprechzeit'
+    : chaptersOf(items[0].text).length + ' Kapitel · ' + w + ' Wörter · ca. ' + fmt(w / WPM * 60) + ' Min';
+  const ol = $('#rcList'); ol.textContent = ''; ol.hidden = !multi;
+  items.forEach(i => { const li = document.createElement('li'); const b = document.createElement('button'); b.disabled = true;
+    b.textContent = (i.title || guessTitle(i.text)) + ' · ' + chaptersOf(i.text).length + ' Kapitel'; li.append(b); ol.append(li); });
+  $('#rcReplaceWrap').hidden = !multi;
+  $('#rcSend').textContent = multi ? 'Alle senden' : 'Senden';
+  $('#rcLocal').textContent = multi ? 'Alle auf diesem Gerät öffnen' : 'Auf diesem Gerät im Prompter öffnen';
   $('#rcCode').value = P2P.target || '';
   show('receive');
   if (!P2P.on) { $('#rcSend').disabled = true; rcState('Senden geht hier nicht. Öffne das Skript auf diesem Gerät.'); return; }
@@ -1296,14 +1353,15 @@ function sendReceived() {
   if (!received) return;
   const code = $('#rcCode').value.replace(/\D/g, '');
   if (code.length !== 4) { rcState('Bitte den 4-stelligen Code vom iPad eingeben.'); return; }
-  pendingImport = { title: String(received.title || '').slice(0, 80), text: received.text.slice(0, 200000) };
+  pendingImport = { pkg: String(received.pkg || '').slice(0, 80), replace: $('#rcReplace').checked,
+    items: received.items.map(i => ({ title: String(i.title || '').slice(0, 80), text: String(i.text).slice(0, 200000) })) };
   if (P2P.rconn && P2P.rconn.open && P2P.target === code) { flushPendingImport(); return; }
   rcState('Verbinde mit iPad ' + code + ' …');
   p2pConnect(code);
 }
 function flushPendingImport() {
   if (!pendingImport || !(P2P.rconn && P2P.rconn.open)) return;
-  P2P.rconn.send({ type: 'import', title: pendingImport.title, text: pendingImport.text });
+  P2P.rconn.send({ type: 'importMany', pkg: pendingImport.pkg, replace: pendingImport.replace, items: pendingImport.items });
   pendingImport = null;
   rcState('Gesendet, warte auf Bestätigung vom iPad …');
 }
@@ -1311,7 +1369,7 @@ $('#rcSend').addEventListener('click', sendReceived);
 $('#rcCode').addEventListener('keydown', e => { if (e.key === 'Enter') sendReceived(); });
 $('#rcLocal').addEventListener('click', () => {
   if (!received) return;
-  importAny(received.text, received.title).then(() => go('prompter'), () => rcState('Das Skript konnte nicht angelegt werden.'));
+  if (importMany(received.items, $('#rcReplace').checked)) go('prompter'); else rcState('Das Skript konnte nicht angelegt werden.');
 });
 
 /* ---------- Ansichten ---------- */
@@ -1319,7 +1377,7 @@ const VIEWS = ['home', 'editor', 'prompter', 'remote', 'receive'];
 function go(v) { const h = v === 'home' ? '' : v; if (location.hash.slice(1) === h) show(v); else location.hash = h; }
 function route() {
   const h = location.hash.slice(1);
-  if (STANDALONE && (h.startsWith('s=') || h.startsWith('i='))) {
+  if (STANDALONE && /^[spi]=/.test(h)) {
     try { history.replaceState(null, '', location.pathname + location.search + '#receive'); } catch {}
     resolveImport('#i=' + h.slice(2), '').then(showReceive, e => {
       show('home');

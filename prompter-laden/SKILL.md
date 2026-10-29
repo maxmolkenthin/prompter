@@ -94,6 +94,16 @@ PY
    - Alternativ den Link direkt auf dem iPad öffnen → „Auf diesem Gerät im Prompter öffnen“ (landet im Safari-Speicher, nicht in einer Home-Bildschirm-App).
 5. Kapitelliste, Wortzahl und Sprechzeit (130 Wörter/Min) nennen.
 
+### Drehpaket: alle Filme eines Projekts in einem Link
+
+Wenn der Nutzer „alle Konzepte“, „Drehpaket“, „das ganze Projekt“ oder einen Drehtag nennt:
+
+1. Alle Konzepte des Projekts finden (Drive: `title contains '<PROJEKT>_Konzept'`, neueste Fassung je Film), Sprechertext je Film wie oben aufbereiten.
+2. Titel einheitlich und sortierbar: `Kunde · Film N · Thema (vNNN)`, Reihenfolge nach der Filmnummer im Konzept.
+3. Link-Format `#p=` mit `{"n": "Projekt · Drehpaket vNNN", "s": [{"t": Titel, "x": Text}, …]}`, sonst wie oben (raw-deflate, base64url ohne `=`).
+4. Ausgeben als antippbaren Markdown-Link. Erklären: Auf dem Handy antippen → „Andere Skripte auf dem iPad dabei entfernen“ anhaken, wenn nur das Projekt drauf sein soll → „Alle senden“. Gewechselt wird am Set über „Film wählen“ auf der Fernbedienung oder die Auswahl in der Prompter-Leiste am iPad.
+5. Gleiche Titel überschreiben die alte Fassung. Bei einer neuen Konzeptversion also den Titel mit neuer Versionsnummer schicken und „entfernen“ anhaken, damit keine alten Fassungen herumliegen.
+
 Steuerbefehle aus Claude gehen bei der GitHub-Version nicht. Dort steuern Handy oder Clicker.
 
 ## Grenzen
