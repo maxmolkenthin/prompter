@@ -1,0 +1,1332 @@
+<title>Colada Prompter</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: vier Vollbild-Ansichten (Start, Skript, Prompter, Fernbedienung). Der Prompter ist eine reine Bühne,
+   die Bedienung schwebt in einer dunklen Studio-Leiste. Bewusst nur dunkel: am Set blendet nichts. */
+:root{
+  --bg:#0e1013; --panel:#161a1f; --panel2:#1e232a; --line:#2b313a; --fg:#eef1f4; --muted:#8f99a7;
+  --tally:#ff4b2b; --ok:#3ccb8c; --warn:#f2b441;
+  --f-ui:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button,select,input,textarea{font:inherit;color:inherit}
+button{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 14px;min-height:44px;cursor:pointer;touch-action:manipulation;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+button:hover{border-color:#414955}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--warn);outline-offset:2px}
+button.primary{background:var(--tally);border-color:var(--tally);color:#fff;font-weight:700}
+button.ghost{background:transparent}
+button.danger{color:#ff8f7a}
+button[aria-pressed="true"]{background:#1d3a2d;border-color:var(--ok);color:#dcffee}
+select,input[type=text]{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-height:44px;min-width:0}
+input[type=range]{width:100%;accent-color:var(--tally)}
+svg{width:22px;height:22px;fill:currentColor;flex:none}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.view{min-height:100%}
+h1,h2,h3{text-wrap:balance;margin:0}
+h3{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700}
+.status{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.status::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.status[data-s=live]::before{background:var(--ok);box-shadow:0 0 0 3px rgba(60,203,140,.18)}
+.status[data-s=sync]::before{background:var(--warn)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-block:10px;border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+.bar .grow{flex:1 1 auto}
+
+/* Start */
+.home-in{max-width:960px;margin:0 auto;padding-block:clamp(24px,6vh,64px);display:grid;gap:28px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:13px;color:var(--muted)}
+.tally{width:12px;height:12px;border-radius:50%;background:var(--tally);box-shadow:0 0 12px var(--tally)}
+.home-in h1{font-size:clamp(30px,5vw,46px);line-height:1.1}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.tile{display:grid;align-content:start;justify-items:start;gap:8px;text-align:left;white-space:normal;padding:20px;min-height:150px;border-radius:14px;background:var(--panel)}
+.tile b{font-size:24px}
+.tile span{color:var(--muted)}
+.tile.primary{background:var(--panel);border-color:var(--tally);color:var(--fg);font-weight:400}
+.tile.primary b{color:#ff7a5e}
+.help{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px 18px}
+.help summary{cursor:pointer;padding-block:12px;font-weight:700}
+.help-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;padding-bottom:16px}
+.help table{border-collapse:collapse;width:100%;font-size:14px}
+.help td{padding:5px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.help td:first-child{white-space:nowrap;padding-right:12px}
+kbd{font-family:var(--f-mono);font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+.help p{margin:6px 0;font-size:14px;color:var(--muted)}
+
+/* Skript */
+.ed-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;padding-block:18px;max-width:1320px;margin:0 auto}
+.ed-main{display:grid;gap:10px;align-content:start;min-width:0}
+.ed-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#title{font-size:20px;font-weight:700;width:100%}
+#text{width:100%;min-height:58vh;resize:vertical;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;font-size:18px;line-height:1.6;box-sizing:border-box}
+.ed-side{display:grid;gap:18px;align-content:start;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px}
+.field{display:grid;gap:4px}
+.field label{display:flex;justify-content:space-between;font-size:14px}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.row>button{flex:1 1 0}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{flex:1;border:0;border-radius:0;min-height:40px;font-size:14px}
+.seg button+button{border-left:1px solid var(--line)}
+.chlist{list-style:none;margin:0;padding:0;display:grid;gap:4px;counter-reset:ch}
+.chlist li{counter-increment:ch}
+.chlist button{width:100%;justify-content:flex-start;background:transparent;border-color:transparent;text-align:left;white-space:normal;min-height:38px;padding:6px 8px}
+.chlist button::before{content:counter(ch,decimal-leading-zero);font-family:var(--f-mono);color:var(--tally);font-size:13px}
+.chlist button:hover{background:var(--panel2)}
+.chlist li.on button{background:var(--panel2);border-color:var(--tally)}
+.empty-note{font-size:14px;color:var(--muted);margin:0}
+.stats{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:var(--muted)}
+.save{font-size:13px}
+
+/* Prompter */
+#v-prompter{position:fixed;inset:0;z-index:20;overflow:hidden;--pbg:#000;--pfg:#fff;--pcue:#ffc23d;--fs:64px;--mx:8%;--rl:30%;background:var(--pbg);color:var(--pfg)}
+#v-prompter[data-theme=yb]{--pfg:#ffe14a}
+#v-prompter[data-theme=bw]{--pbg:#fff;--pfg:#000;--pcue:#9a5200}
+#stage{position:absolute;inset:0;touch-action:none;user-select:none;-webkit-user-select:none}
+#v-prompter:not(.ui) #stage{cursor:none}
+#flip{position:absolute;inset:0}
+#track{position:absolute;left:var(--mx);right:var(--mx);top:calc(var(--rl) - var(--fs) * .66);font-size:var(--fs);line-height:1.32;font-weight:700;will-change:transform;overflow-wrap:break-word}
+#track p{margin:0 0 .85em}
+.cue{display:flex;gap:.6em;align-items:baseline;font-size:.46em;line-height:1.25;color:var(--pcue);text-transform:uppercase;letter-spacing:.07em;border-top:3px solid currentColor;padding-top:.35em;margin:.4em 0 .9em}
+.cue-n{font-family:var(--f-mono)}
+.end{font-size:.46em;color:var(--pcue);text-align:center;letter-spacing:.1em;padding-bottom:100vh}
+.p-empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-size:24px;color:var(--muted);padding:24px}
+.fade{position:absolute;left:0;right:0;top:0;height:calc(var(--rl) - var(--fs) * .7);background:linear-gradient(to bottom,color-mix(in srgb,var(--pbg) 90%,transparent),color-mix(in srgb,var(--pbg) 40%,transparent));pointer-events:none;z-index:1}
+#readline{position:absolute;left:0;right:0;top:var(--rl);height:0;border-top:1px solid color-mix(in srgb,var(--tally) 30%,transparent);pointer-events:none;z-index:2}
+#readline::before,#readline::after{content:"";position:absolute;top:-13px;border:13px solid transparent}
+#readline::before{left:0;border-left:20px solid var(--tally)}
+#readline::after{right:0;border-right:20px solid var(--tally)}
+.p-top,.ctrl{position:absolute;left:0;right:0;z-index:5;transition:opacity .25s;color:var(--fg);font-family:var(--f-ui);background:rgba(14,16,19,.93)}
+.p-top{top:0;display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:space-between;align-items:center;font-size:14px;padding:calc(8px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line)}
+.ctrl{bottom:0;display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;align-items:center;font-size:15px;padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));border-top:1px solid var(--line)}
+.grp{display:flex;align-items:center;gap:6px}
+.grp .val{min-width:4.6em;text-align:center;font-size:13px;color:var(--muted)}
+.grp .val b{display:block;color:var(--fg);font-family:var(--f-mono);font-size:16px}
+.ctrl .play{min-width:64px;min-height:52px;background:var(--tally);border-color:var(--tally);color:#fff}
+#v-prompter.playing .ctrl .play{background:var(--panel2);border-color:var(--line)}
+#v-prompter:not(.ui) .ctrl,#v-prompter:not(.ui) .p-top{opacity:0;pointer-events:none}
+#toast{position:absolute;left:50%;bottom:calc(110px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:6;background:rgba(14,16,19,.92);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px;font-family:var(--f-ui);opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+#toast.on{opacity:1}
+
+/* Fernbedienung */
+.r-wrap{max-width:560px;margin:0 auto;padding-block:16px 32px;display:grid;gap:14px}
+.r-now{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:8px}
+.r-title{font-size:20px;font-weight:700;overflow-wrap:anywhere}
+.prog{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.prog>div{height:100%;width:0;background:var(--tally);transition:width .3s linear}
+.r-meta{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.r-main{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:10px}
+.r-main button{min-height:88px;flex-direction:column;gap:4px;font-size:14px;border-radius:14px}
+.r-main svg{width:30px;height:30px}
+#rPlay{background:var(--tally);border-color:var(--tally);color:#fff;font-weight:700;font-size:17px}
+#rPlay.playing{background:var(--panel2);border-color:var(--line);color:var(--fg)}
+.r-row{display:flex;gap:8px}
+.r-row>*{flex:1 1 0;min-width:0}
+.r-row>button{white-space:normal;font-size:14px}
+.r-row>button.r-pause{min-height:60px;font-size:16px;font-weight:700}
+.pair{display:flex;gap:8px}
+.pair input{flex:1 1 auto;width:0;font-family:var(--f-mono);font-size:26px;letter-spacing:.35em;text-align:center}
+.card textarea{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:16px;line-height:1.5;resize:vertical}
+.card input[type=text]{width:100%;box-sizing:border-box}
+.code-card{display:grid;gap:4px;justify-items:start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
+.code-card b{font-size:44px;letter-spacing:.25em;line-height:1.1}
+.auto{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.auto-state{font-size:14px;color:var(--muted)}
+.auto-state.err{color:#ff8f7a}
+.stepper{display:grid;grid-template-columns:56px 1fr 56px;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px}
+.stepper button{font-size:22px;padding:0}
+.stepper div{text-align:center;font-size:13px;color:var(--muted)}
+.stepper b{display:block;font-family:var(--f-mono);font-size:20px;color:var(--fg)}
+.r-script{display:grid;gap:6px}
+.r-script select{width:100%}
+
+@media (max-width:880px){.ed-grid{grid-template-columns:minmax(0,1fr)}#text{min-height:46vh}}
+@media (max-width:420px){.r-main button{min-height:76px}.bar .save{order:9;width:100%}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div id="app">
+
+<section id="v-home" class="view">
+  <div class="home-in gut">
+    <div class="brand"><span class="tally" aria-hidden="true"></span>Colada Prompter</div>
+    <h1>Was macht dieses Gerät?</h1>
+    <div class="tiles">
+      <button class="tile" data-go="editor"><b>Skript</b><span>Text einfügen, Kapitelmarken setzen, Schrift, Tempo und Spiegelung einstellen.</span></button>
+      <button class="tile primary" data-go="prompter"><b>Prompter</b><span>Dieses Gerät liegt im Teleprompter und zeigt den Text.</span></button>
+      <button class="tile" data-go="remote"><b>Fernbedienung</b><span id="tileRemote">Handy oder zweites Tablet steuert den Prompter, live und ohne Kopplung.</span></button>
+    </div>
+    <div id="homeStatus" class="status">Verbinde …</div>
+    <div id="homeCode" class="code-card" hidden>
+      <span class="muted">Kopplungscode dieses Geräts</span>
+      <b class="mono" id="homeCodeVal">····</b>
+      <span class="muted">Auf dem Handy dieselbe Adresse öffnen, „Fernbedienung“ wählen und den Code eingeben.</span>
+    </div>
+    <details class="help">
+      <summary>Bedienung, Tastenkürzel, Bluetooth und Claude</summary>
+      <div class="help-grid">
+        <div>
+          <h3>Tastatur und Bluetooth-Clicker</h3>
+          <table>
+            <tr><td><kbd>Leertaste</kbd> <kbd>B</kbd> <kbd>.</kbd></td><td>Start / Pause</td></tr>
+            <tr><td><kbd>→</kbd> <kbd>Bild ↓</kbd></td><td>Nächstes Kapitel</td></tr>
+            <tr><td><kbd>←</kbd> <kbd>Bild ↑</kbd></td><td>Kapitel zurück (erst Kapitelanfang)</td></tr>
+            <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Tempo schneller / langsamer</td></tr>
+            <tr><td><kbd>+</kbd> <kbd>−</kbd></td><td>Schrift größer / kleiner</td></tr>
+            <tr><td><kbd>Pos1</kbd></td><td>Zum Anfang</td></tr>
+            <tr><td><kbd>H</kbd> <kbd>V</kbd></td><td>Horizontal / vertikal spiegeln</td></tr>
+          </table>
+          <p>Presenter-Clicker und Fußpedale melden sich am iPad als Bluetooth-Tastatur. Sie funktionieren ohne Einrichtung.</p>
+        </div>
+        <div>
+          <h3>Kapitelmarken</h3>
+          <p>Eine Zeile, die mit <kbd>#</kbd> beginnt, wird zur Kapitelmarke, zum Beispiel <span class="mono"># Intro</span>. Im Skript-Editor setzt der Knopf „Kapitelmarke“ sie an der Cursorzeile.</p>
+          <h3 style="margin-top:14px">Fernbedienung</h3>
+          <p id="helpRemote">Denselben Link auf dem zweiten Gerät öffnen und „Fernbedienung“ wählen. Beide Geräte brauchen Internet und müssen mit dem Claude-Konto angemeldet sein, das Zugriff auf diese App hat.</p>
+          <h3 style="margin-top:14px">Steuerung durch Claude</h3>
+          <p id="helpClaude">Sag Claude zum Beispiel „Lade das Skript aus dem ClickUp-Projekt Müller Recruitingfilm in den Prompter“. Claude holt den Text, teilt ihn in Kapitel und setzt ihn als aktives Skript. Auch „Starte den Prompter“ oder „Spring zu Kapitel 3“ geht. Je nach Verbindung reagiert der Prompter sofort oder nach bis zu 30 Sekunden.</p>
+        </div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<section id="v-editor" class="view" hidden>
+  <header class="bar gut">
+    <button class="ghost" data-go="home">← Start</button>
+    <select id="scriptSel" aria-label="Skript wählen"></select>
+    <button id="btnNew">Neues Skript</button>
+    <button id="btnDel" class="ghost danger">Löschen</button>
+    <span class="grow"></span>
+    <span id="saveState" class="save muted mono"></span>
+    <button id="btnStart" class="primary" data-go="prompter">Prompter starten
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+  </header>
+  <div class="ed-grid gut">
+    <div class="ed-main">
+      <div id="importBox" class="card" hidden>
+        <h3><label for="importText">Import-Link oder Text von Claude</label></h3>
+        <textarea id="importText" rows="3" placeholder="Link einfügen, der mit …#i= endet, oder den fertigen Text mit #-Kapiteln"></textarea>
+        <div class="row"><button id="importGo" class="primary">Als neues Skript übernehmen</button><button id="importCancel" class="ghost">Abbrechen</button></div>
+        <p id="importState" class="empty-note" role="status"></p>
+      </div>
+      <input id="title" type="text" placeholder="Titel des Skripts" aria-label="Titel">
+      <div class="ed-tools">
+        <button id="btnMark">+ Kapitelmarke</button>
+        <button id="btnImport" hidden>Import-Link einfügen</button>
+        <span class="auto" id="autoWrap" hidden>
+          <button id="btnAuto">Kapitel automatisch setzen</button>
+          <button id="btnUndo" class="ghost" hidden>Rückgängig</button>
+          <span id="autoState" class="auto-state" role="status"></span>
+        </span>
+      </div>
+      <p class="muted" style="font-size:14px;margin:0">Text einfach einfügen. Zeilen mit # werden Kapitel. „Kapitel automatisch setzen“ lässt Claude Abschnitte erkennen, ohne ein Wort zu ändern.</p>
+      <textarea id="text" spellcheck="true" aria-label="Skripttext" placeholder="Skript hier einfügen …&#10;&#10;# Intro&#10;Hallo, ich bin …&#10;&#10;# Kapitel 2&#10;…"></textarea>
+      <div class="stats"><span id="stWords" class="mono"></span><span id="stDur" class="mono"></span></div>
+    </div>
+    <aside class="ed-side">
+      <div class="card">
+        <h3>Kapitel</h3>
+        <ol id="chList" class="chlist"></ol>
+        <p id="chEmpty" class="empty-note">Noch keine Kapitelmarken. Setz eine mit „+ Kapitelmarke“ oder beginne eine Zeile mit #.</p>
+      </div>
+      <div class="card">
+        <h3>Darstellung im Prompter</h3>
+        <div class="field"><label for="setSize">Schriftgröße <span class="mono" id="oSize"></span></label><input id="setSize" type="range" min="24" max="200" step="2"></div>
+        <div class="field"><label for="setSpeed">Tempo <span class="mono" id="oSpeed"></span></label><input id="setSpeed" type="range" min="1" max="30" step="1"></div>
+        <div class="field"><label for="setMargin">Seitenrand <span class="mono" id="oMargin"></span></label><input id="setMargin" type="range" min="0" max="30" step="1"></div>
+        <div class="field"><label for="setLine">Leselinie von oben <span class="mono" id="oLine"></span></label><input id="setLine" type="range" min="10" max="60" step="1"></div>
+        <div class="row">
+          <button id="edMH" aria-pressed="false">⇋ Horizontal spiegeln</button>
+          <button id="edMV" aria-pressed="false">⇅ Vertikal spiegeln</button>
+        </div>
+        <div class="field"><label>Farben</label>
+          <div class="seg" role="group" aria-label="Farben">
+            <button data-theme="wb" aria-pressed="false">Weiß auf Schwarz</button>
+            <button data-theme="yb" aria-pressed="false">Gelb</button>
+            <button data-theme="bw" aria-pressed="false">Schwarz auf Weiß</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section id="v-prompter" class="view ui" hidden>
+  <div id="stage">
+    <div id="flip">
+      <div class="fade" aria-hidden="true"></div>
+      <div id="readline" aria-hidden="true"></div>
+      <div id="track"></div>
+    </div>
+    <div id="pEmpty" class="p-empty" hidden>Kein Skript geladen.<br>Öffne „Skript“ und füge einen Text ein.</div>
+  </div>
+  <div class="p-top">
+    <span id="pChapter">–</span>
+    <span class="mono" id="pTime"></span>
+    <span class="mono" id="pCode"></span>
+    <span id="pRemotes" class="status"></span>
+  </div>
+  <div class="ctrl" id="ctrl">
+    <button data-c="close">✕ Schließen</button>
+    <div class="grp">
+      <button data-c="prev" aria-label="Kapitel zurück"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg></button>
+      <button data-c="toggle" class="play" id="pPlay" aria-label="Start oder Pause"></button>
+      <button data-c="next" aria-label="Nächstes Kapitel"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg></button>
+    </div>
+    <div class="grp"><button data-c="slower" aria-label="Langsamer">−</button><span class="val">Tempo<b id="pSpeed"></b></span><button data-c="faster" aria-label="Schneller">+</button></div>
+    <div class="grp"><button data-c="smaller" aria-label="Schrift kleiner">A−</button><span class="val">Schrift<b id="pSize"></b></span><button data-c="bigger" aria-label="Schrift größer">A+</button></div>
+    <div class="grp">
+      <button data-c="mirrorH" id="pMH" aria-pressed="false">⇋ Spiegeln</button>
+      <button data-c="mirrorV" id="pMV" aria-pressed="false">⇅ Spiegeln</button>
+    </div>
+    <button data-c="fs">Vollbild</button>
+  </div>
+  <div id="toast" role="status"></div>
+</section>
+
+<section id="v-remote" class="view" hidden>
+  <header class="bar gut">
+    <button class="ghost" data-go="home">← Start</button>
+    <span class="grow"></span>
+    <span id="rStatus" class="status"></span>
+  </header>
+  <div class="r-wrap gut">
+    <div class="card" id="rPair" hidden>
+      <h3><label for="rCode">Kopplungscode vom iPad</label></h3>
+      <div class="pair">
+        <input id="rCode" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="1234">
+        <button id="rConnect" class="primary">Verbinden</button>
+      </div>
+      <p id="rPairState" class="empty-note">Der Code steht auf dem iPad auf der Startseite und oben im Prompter.</p>
+    </div>
+    <div class="r-now">
+      <div id="rTitle" class="r-title">–</div>
+      <div id="rChapter" class="muted"></div>
+      <div class="prog"><div id="rProg"></div></div>
+      <div class="r-meta mono"><span id="rPct"></span><span id="rRemain"></span></div>
+      <div id="rSrc" class="status"></div>
+    </div>
+    <div class="r-main">
+      <button data-r="prev"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg>Kapitel zurück</button>
+      <button data-r="toggle" id="rPlay"></button>
+      <button data-r="next"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg>Nächstes Kapitel</button>
+    </div>
+    <div class="r-row">
+      <button data-r="pause" class="r-pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>Pause</button>
+      <button data-r="stop" class="r-pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v12H6z"/></svg>Stopp &amp; Anfang</button>
+    </div>
+    <div class="r-row">
+      <button data-r="back">↑ Etwas zurück</button>
+      <button data-r="fwd">↓ Etwas vor</button>
+      <button data-r="top">⤒ Anfang</button>
+    </div>
+    <div class="stepper"><button data-r="slower" aria-label="Langsamer">−</button><div>Tempo<b id="rSpeed">–</b></div><button data-r="faster" aria-label="Schneller">+</button></div>
+    <div class="stepper"><button data-r="smaller" aria-label="Schrift kleiner">−</button><div>Schriftgröße<b id="rSize">–</b></div><button data-r="bigger" aria-label="Schrift größer">+</button></div>
+    <div class="r-row">
+      <button data-r="mirrorH" id="rMH" aria-pressed="false">⇋ Horizontal spiegeln</button>
+      <button data-r="mirrorV" id="rMV" aria-pressed="false">⇅ Vertikal spiegeln</button>
+    </div>
+    <div class="r-script" id="rScriptWrap">
+      <h3><label for="rScript">Skript auf dem Prompter</label></h3>
+      <select id="rScript"></select>
+    </div>
+    <div class="card">
+      <h3>Kapitel antippen zum Springen</h3>
+      <ol id="rChapters" class="chlist"></ol>
+      <p id="rChEmpty" class="empty-note">Dieses Skript hat keine Kapitelmarken.</p>
+    </div>
+    <div class="card" id="rSend" hidden>
+      <h3><label for="rSendText">Skript an den Prompter schicken</label></h3>
+      <input id="rSendTitle" type="text" placeholder="Titel (optional)" aria-label="Titel">
+      <textarea id="rSendText" rows="5" placeholder="Text oder Import-Link von Claude hier einfügen. Zeilen mit # werden Kapitel."></textarea>
+      <button id="rSendBtn">An Prompter senden</button>
+      <p id="rSendState" class="empty-note" role="status"></p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const ICON_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+const ICON_PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+const WPM = 130;
+
+const DEF = { size: 64, speed: 6, margin: 8, line: 30, mirrorH: false, mirrorV: false, theme: 'wb' };
+const LIM = { size: [24, 200], speed: [1, 30], margin: [0, 30], line: [10, 60] };
+const S = {
+  set: Object.assign({}, DEF, LS.get('tp.settings', {})),
+  scripts: new Map(),
+  activeId: LS.get('tp.active', null),
+  pos: 0, target: null, playing: false, view: 'home'
+};
+
+let db = null, room = null, bc = null, booted = false;
+// Eigenständige Version (GitHub): kein window.claude, dafür PeerJS für die Direktverbindung.
+const STANDALONE = !(window.claude && typeof window.claude.use === 'function');
+const P2P = { on: STANDALONE && typeof window.Peer === 'function', peer: null, code: null, status: '', idTries: 0,
+  conns: new Set(), target: LS.get('tp.target', ''), rconn: null, rstatus: '', state: null, stateAt: 0, sentKey: '' };
+try { bc = new BroadcastChannel('colada-prompter'); } catch {}
+
+/* ---------- Skripte: Speicher ---------- */
+const sorted = () => [...S.scripts.values()].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+const activeScript = () => S.scripts.get(S.activeId) || null;
+
+function loadLocal() {
+  S.scripts.clear();
+  const o = LS.get('tp.scripts', {});
+  for (const id in o) S.scripts.set(id, o[id]);
+}
+function saveLocal() {
+  const o = {};
+  S.scripts.forEach((v, k) => { o[k] = v; });
+  LS.set('tp.scripts', o);
+  if (bc) bc.postMessage({ type: 'scripts' });
+}
+
+let saveTimer = 0, saveQ = Promise.resolve(), dirty = false;
+function setSaveState(t) { $('#saveState').textContent = t; }
+function scheduleSave() {
+  dirty = true; setSaveState('Ungespeichert');
+  clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 700);
+}
+function saveNow() {
+  clearTimeout(saveTimer);
+  const sc = activeScript();
+  if (!sc || !dirty) return;
+  sc.title = $('#title').value.trim() || 'Ohne Titel';
+  sc.text = $('#text').value;
+  sc.updatedAt = Date.now();
+  dirty = false;
+  const body = { title: sc.title, text: sc.text, updatedAt: sc.updatedAt };
+  if (db) {
+    setSaveState('Speichert …');
+    saveQ = saveQ.then(() => db.doc('scripts/' + sc.id).set(body))
+      .then(() => { if (!dirty) setSaveState('Gespeichert'); })
+      .catch(e => setSaveState(e && e.code === 'quota_exceeded' ? 'Speicher voll' : 'Speichern fehlgeschlagen'));
+  } else { saveLocal(); setSaveState('Auf diesem Gerät gespeichert'); }
+  renderScriptSelects();
+}
+function writeScript(sc) {
+  const body = { title: sc.title, text: sc.text, updatedAt: sc.updatedAt };
+  if (db) saveQ = saveQ.then(() => db.doc('scripts/' + sc.id).set(body)).catch(() => setSaveState('Speichern fehlgeschlagen'));
+  else saveLocal();
+}
+function newScript(text) {
+  if (dirty) saveNow();
+  const id = 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const sc = { id, title: 'Neues Skript', text: text || '', updatedAt: Date.now() };
+  S.scripts.set(id, sc);
+  writeScript(sc);
+  setActive(id, true);
+  return sc;
+}
+let delArm = 0;
+function deleteActive() {
+  const b = $('#btnDel'), sc = activeScript();
+  if (!sc) return;
+  if (!delArm) {
+    b.textContent = 'Wirklich löschen?';
+    delArm = setTimeout(() => { delArm = 0; b.textContent = 'Löschen'; }, 3000);
+    return;
+  }
+  clearTimeout(delArm); delArm = 0; b.textContent = 'Löschen';
+  dirty = false; clearTimeout(saveTimer);
+  S.scripts.delete(sc.id);
+  if (db) saveQ = saveQ.then(() => db.doc('scripts/' + sc.id).delete()).catch(() => {});
+  else saveLocal();
+  const next = sorted()[0];
+  setActive(next ? next.id : null, true);
+}
+function setActive(id, broadcast) {
+  if (dirty) saveNow();
+  S.activeId = id; LS.set('tp.active', id);
+  if (broadcast) {
+    if (db && id) db.doc('live/state').set({ scriptId: id, updatedAt: Date.now() }).catch(() => {});
+    else if (bc) bc.postMessage({ type: 'active', id });
+  }
+  onActiveChanged();
+}
+function onActiveChanged() {
+  renderEditor(true);
+  if (S.view === 'prompter') { setPlay(false); S.pos = 0; S.target = null; buildTrack(); }
+  renderRemote(); pushPresence();
+}
+function onScriptsChanged() {
+  if (!S.scripts.has(S.activeId)) { const f = sorted()[0]; S.activeId = f ? f.id : null; }
+  renderEditor(false);
+  if (S.view === 'prompter') { const sc = activeScript(); if (keyOf(sc) !== builtFor) rebuildKeepPos(); }
+  renderRemote(); pushPresence();
+}
+
+/* ---------- Text zerlegen ---------- */
+function parse(text) {
+  const out = []; let para = [];
+  const flush = () => { if (para.length) { out.push({ t: 'p', lines: para }); para = []; } };
+  for (const raw of String(text || '').replace(/\r\n?/g, '\n').split('\n')) {
+    const m = raw.match(/^\s*#{1,6}\s*(.*)$/);
+    if (m) { flush(); out.push({ t: 'h', title: m[1].trim() || 'Kapitel' }); }
+    else if (!raw.trim()) flush();
+    else para.push(raw.trim());
+  }
+  flush();
+  return out;
+}
+const chaptersOf = text => parse(text).filter(b => b.t === 'h').map(b => b.title);
+function wordCount(text) {
+  return String(text || '').split('\n').filter(l => !/^\s*#/.test(l)).join(' ').split(/\s+/).filter(Boolean).length;
+}
+function fmt(sec) {
+  sec = Math.max(0, Math.round(sec || 0));
+  return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+}
+
+/* ---------- Einstellungen ---------- */
+function setSetting(k, v) {
+  if (LIM[k]) v = clamp(Math.round(+v) || DEF[k], LIM[k][0], LIM[k][1]);
+  if (k === 'theme' && !['wb', 'yb', 'bw'].includes(v)) return;
+  if (k === 'mirrorH' || k === 'mirrorV') v = !!v;
+  const relayout = (k === 'size' || k === 'margin') && S.view === 'prompter';
+  const max0 = maxPos();
+  const ratio = relayout && max0 ? (S.target ?? S.pos) / max0 : null;
+  S.set[k] = v;
+  LS.set('tp.settings', S.set);
+  applySettings();
+  if (ratio != null) { S.target = null; S.pos = ratio * maxPos(); }
+  pushPresence(true);
+}
+function applySettings() {
+  const p = $('#v-prompter'), s = S.set;
+  p.style.setProperty('--fs', s.size + 'px');
+  p.style.setProperty('--mx', s.margin + '%');
+  p.style.setProperty('--rl', s.line + '%');
+  p.dataset.theme = s.theme;
+  $('#flip').style.transform = `scale(${s.mirrorH ? -1 : 1},${s.mirrorV ? -1 : 1})`;
+  $('#setSize').value = s.size; $('#oSize').textContent = s.size + ' px';
+  $('#setSpeed').value = s.speed; $('#oSpeed').textContent = s.speed;
+  $('#setMargin').value = s.margin; $('#oMargin').textContent = s.margin + ' %';
+  $('#setLine').value = s.line; $('#oLine').textContent = s.line + ' %';
+  $('#pSpeed').textContent = s.speed; $('#pSize').textContent = s.size;
+  for (const id of ['#edMH', '#pMH']) $(id).setAttribute('aria-pressed', s.mirrorH);
+  for (const id of ['#edMV', '#pMV']) $(id).setAttribute('aria-pressed', s.mirrorV);
+  $$('[data-theme]').forEach(b => b.setAttribute('aria-pressed', b.dataset.theme === s.theme));
+}
+
+/* ---------- Skript-Editor ---------- */
+function renderScriptSelects() {
+  const list = sorted();
+  for (const sel of P2P.on ? [$('#scriptSel')] : [$('#scriptSel'), $('#rScript')]) {
+    sel.textContent = '';
+    if (!list.length) { const o = new Option('Noch kein Skript', ''); sel.add(o); sel.disabled = true; continue; }
+    sel.disabled = false;
+    for (const sc of list) sel.add(new Option(sc.title || 'Ohne Titel', sc.id));
+    sel.value = S.activeId || '';
+  }
+}
+function renderEditor(force) {
+  renderScriptSelects();
+  const sc = activeScript(), ta = $('#text'), ti = $('#title');
+  const editing = document.activeElement === ta || document.activeElement === ti;
+  if (force || (!dirty && !editing)) { ta.value = sc ? sc.text : ''; ti.value = sc ? sc.title : ''; }
+  $('#btnDel').disabled = !sc;
+  if (!dirty) setSaveState(sc ? (db ? 'Gespeichert' : 'Auf diesem Gerät gespeichert') : '');
+  renderChapterList();
+  renderStats();
+}
+function renderStats() {
+  const w = wordCount($('#text').value);
+  $('#stWords').textContent = w + ' Wörter';
+  $('#stDur').textContent = 'ca. ' + fmt(w / WPM * 60) + ' Min Sprechzeit bei ' + WPM + ' Wörtern/Min';
+}
+function renderChapterList() {
+  const ol = $('#chList'); ol.textContent = '';
+  const lines = $('#text').value.split('\n');
+  const ta = $('#text');
+  const curLine = ta.value.slice(0, ta.selectionStart).split('\n').length - 1;
+  let n = 0, onIdx = -1;
+  lines.forEach((l, i) => { if (/^\s*#/.test(l) && i <= curLine) onIdx = n; if (/^\s*#/.test(l)) n++; });
+  n = 0;
+  lines.forEach((l, i) => {
+    const m = l.match(/^\s*#{1,6}\s*(.*)$/);
+    if (!m) return;
+    const li = document.createElement('li');
+    if (n === onIdx) li.className = 'on';
+    const b = document.createElement('button');
+    b.textContent = m[1].trim() || 'Kapitel';
+    b.addEventListener('click', () => jumpEditorToLine(i));
+    li.append(b); ol.append(li); n++;
+  });
+  $('#chEmpty').hidden = n > 0;
+}
+function jumpEditorToLine(i) {
+  const ta = $('#text'), lines = ta.value.split('\n');
+  let off = 0; for (let k = 0; k < i; k++) off += lines[k].length + 1;
+  ta.focus();
+  ta.setSelectionRange(off, off + lines[i].length);
+  const lh = parseFloat(getComputedStyle(ta).lineHeight) || 28;
+  ta.scrollTop = Math.max(0, i * lh - ta.clientHeight / 3);
+  renderChapterList();
+}
+function insertMark() {
+  const ta = $('#text');
+  if (!activeScript()) newScript('');
+  const v = ta.value, pos = ta.selectionStart;
+  const start = v.lastIndexOf('\n', pos - 1) + 1;
+  const n = chaptersOf(v.slice(0, start)).length + 1;
+  const name = 'Kapitel ' + n;
+  const lineEmpty = !v.slice(start, v.indexOf('\n', start) === -1 ? v.length : v.indexOf('\n', start)).trim();
+  const ins = '# ' + name + (lineEmpty ? '' : '\n');
+  ta.focus();
+  ta.setRangeText(ins, start, start, 'end');
+  ta.setSelectionRange(start + 2, start + 2 + name.length);
+  scheduleSave(); renderChapterList(); renderStats();
+}
+
+/* Kapitel automatisch: Claude bekommt den Text in nummerierten Einheiten und nennt nur,
+   wo ein Kapitel beginnt. Die Seite setzt die #-Zeilen selbst, der Wortlaut bleibt unangetastet. */
+let sample = null, undoText = null, autoBusy = false;
+function splitUnits(text) {
+  const src = String(text).replace(/\r\n?/g, '\n').split('\n').filter(l => !/^\s*#/.test(l));
+  const units = [];
+  const perLine = src.map(l => {
+    if (!l.trim()) return [];
+    const parts = l.length > 300 ? (l.trim().match(/[^.!?…]+[.!?…]+["“”»«'’)]*\s*|[^.!?…]+$/g) || [l.trim()]) : [l.trim()];
+    return parts.map(p => p.trim()).filter(Boolean).map(p => { units.push(p); return units.length - 1; });
+  });
+  return { src, units, perLine };
+}
+function rebuildWithMarks(sp, marks) {
+  const out = [];
+  sp.src.forEach((l, li) => {
+    const ids = sp.perLine[li];
+    if (!ids.length) { out.push(''); return; }
+    let cur = [];
+    for (const u of ids) {
+      if (marks.has(u)) {
+        if (cur.length) { out.push(cur.join(' ')); cur = []; }
+        if (out.length && out[out.length - 1].trim()) out.push('');
+        out.push('# ' + marks.get(u));
+      }
+      cur.push(sp.units[u]);
+    }
+    out.push(cur.join(' '));
+  });
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+}
+function autoState(t, err) { const el = $('#autoState'); el.textContent = t; el.classList.toggle('err', !!err); }
+async function autoChapters() {
+  if (autoBusy || !sample) return;
+  const ta = $('#text'), text = ta.value;
+  const sp = splitUnits(text);
+  if (sp.units.length < 2) { autoState('Zu wenig Text zum Aufteilen.', true); return; }
+  autoBusy = true; $('#btnAuto').disabled = true; autoState('Claude liest den Text …');
+  const listing = sp.units.map((u, i) => '[' + (i + 1) + '] ' + u).join('\n');
+  const prompt = 'Du bereitest ein gesprochenes Skript für einen Teleprompter vor (Imagefilm, Recruitingfilm, Interview, Moderation). ' +
+    'Teile es in sinnvolle Kapitel: thematische Abschnitte, an denen man beim Dreh neu ansetzen würde. ' +
+    'Faustregel: ein Kapitel pro 60 bis 150 Wörter, mindestens 2, höchstens 15. Das erste Kapitel beginnt bei Einheit 1. ' +
+    'Kapitelnamen: Deutsch, 1 bis 4 Wörter, beschreibend (zum Beispiel "Intro", "Arbeitsalltag", "Call to Action").\n\n' +
+    'Antworte NUR mit JSON in dieser Form: {"title": "kurzer Titel für das Skript", "chapters": [{"start": 1, "name": "Intro"}]}\n' +
+    '"start" ist die Nummer der Einheit, mit der das Kapitel beginnt.\n\nText in nummerierten Einheiten:\n' + listing;
+  try {
+    const res = await sample.json(prompt, { modelTier: 'default' });
+    const chs = res && Array.isArray(res.chapters) ? res.chapters : [];
+    const marks = new Map();
+    for (const c of chs) {
+      const i = (Number(c && c.start) | 0) - 1;
+      const name = String((c && c.name) || '').replace(/^#+\s*/, '').replace(/\s+/g, ' ').trim().slice(0, 60);
+      if (i >= 0 && i < sp.units.length && name && !marks.has(i)) marks.set(i, name);
+    }
+    if (!marks.size) throw { code: 'empty' };
+    if (ta.value !== text) { autoState('Text wurde zwischendurch geändert. Bitte nochmal starten.', true); return; }
+    undoText = text;
+    if (!activeScript()) newScript('');
+    ta.value = rebuildWithMarks(sp, new Map([...marks].sort((a, b) => a[0] - b[0])));
+    const ti = $('#title');
+    if (res.title && (!ti.value.trim() || ti.value === 'Neues Skript')) ti.value = String(res.title).slice(0, 80);
+    scheduleSave(); renderChapterList(); renderStats();
+    $('#btnUndo').hidden = false;
+    autoState(marks.size + ' Kapitel gesetzt. Wortlaut unverändert.');
+  } catch (e) {
+    const code = e && e.code;
+    autoState(code === 'not_granted' ? 'Claude-Zugriff wurde nicht erlaubt.'
+      : code === 'rate_limited' ? 'Gerade zu viele Anfragen. In einer Minute nochmal.'
+      : code === 'cancelled' ? 'Abgebrochen.'
+      : 'Hat nicht geklappt. Bitte nochmal versuchen.', true);
+  } finally { autoBusy = false; $('#btnAuto').disabled = false; }
+}
+function undoAuto() {
+  if (undoText == null) return;
+  $('#text').value = undoText; undoText = null; $('#btnUndo').hidden = true;
+  scheduleSave(); renderChapterList(); renderStats(); autoState('Rückgängig gemacht.');
+}
+
+/* ---------- Prompter ---------- */
+const track = $('#track');
+let chapterEls = [], endEl = null, builtFor = null;
+const keyOf = sc => sc ? sc.id + '|' + sc.text : '';
+function buildTrack() {
+  const sc = activeScript();
+  track.textContent = ''; chapterEls = []; endEl = null;
+  builtFor = keyOf(sc);
+  const has = !!(sc && sc.text.trim());
+  $('#pEmpty').hidden = has;
+  if (!has) return;
+  let n = 0;
+  for (const b of parse(sc.text)) {
+    if (b.t === 'h') {
+      const d = document.createElement('div'); d.className = 'cue';
+      const k = document.createElement('span'); k.className = 'cue-n'; k.textContent = String(++n).padStart(2, '0');
+      const t = document.createElement('span'); t.textContent = b.title;
+      d.append(k, t); track.append(d); chapterEls.push(d);
+    } else {
+      const p = document.createElement('p');
+      b.lines.forEach((l, i) => { if (i) p.append(document.createElement('br')); p.append(l); });
+      track.append(p);
+    }
+  }
+  endEl = document.createElement('div'); endEl.className = 'end'; endEl.textContent = 'ENDE';
+  track.append(endEl);
+}
+function rebuildKeepPos() {
+  const m = maxPos(), r = m ? S.pos / m : 0;
+  buildTrack(); S.target = null; S.pos = r * maxPos();
+}
+const maxPos = () => endEl ? endEl.offsetTop : 0;
+const pxPerSec = () => S.set.speed * S.set.size * 0.08;
+const chStarts = () => chapterEls.map(e => e.offsetTop);
+const ref = () => S.target ?? S.pos;
+// Toleranz: die Kapitelzeile hat etwas Abstand nach oben, Position 0 zählt schon als Kapitel 1.
+const tol = () => S.set.size * 0.8;
+function curChapter() { let i = -1; chStarts().forEach((y, k) => { if (y <= S.pos + tol()) i = k; }); return i; }
+function goTo(y) { S.target = clamp(y, 0, maxPos()); }
+function nextCh() { const y = chStarts().find(y => y > ref() + tol()); goTo(y ?? maxPos()); }
+function prevCh() { const b = chStarts().filter(y => y < ref() - 40); goTo(b.length ? b[b.length - 1] : 0); }
+function nudge(d) { goTo(ref() + d * S.set.size * 1.32 * 2); }
+
+function setPlay(on) {
+  if (on && S.pos >= maxPos() - 1 && maxPos() > 0) { S.pos = 0; S.target = null; }
+  S.playing = !!on && maxPos() > 0;
+  const p = $('#v-prompter');
+  p.classList.toggle('playing', S.playing);
+  $('#pPlay').innerHTML = S.playing ? ICON_PAUSE : ICON_PLAY;
+  showUi();
+  pushPresence(true);
+}
+let hideT = 0;
+function showUi() {
+  const p = $('#v-prompter');
+  p.classList.add('ui'); clearTimeout(hideT);
+  if (S.playing) hideT = setTimeout(() => p.classList.remove('ui'), 2200);
+}
+let toastT = 0;
+function toast(t) {
+  const el = $('#toast'); el.textContent = t; el.classList.add('on');
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 1300);
+}
+
+const CMDS = {
+  play: () => setPlay(true), pause: () => setPlay(false), toggle: () => setPlay(!S.playing),
+  stop: () => { setPlay(false); goTo(0); },
+  next: nextCh, prev: prevCh, top: () => goTo(0), back: () => nudge(-1), fwd: () => nudge(1),
+  chapter: v => { const y = chStarts()[v | 0]; if (y != null) goTo(y); },
+  speed: v => setSetting('speed', v), size: v => setSetting('size', v), margin: v => setSetting('margin', v),
+  faster: () => setSetting('speed', S.set.speed + 1), slower: () => setSetting('speed', S.set.speed - 1),
+  bigger: () => setSetting('size', S.set.size + 4), smaller: () => setSetting('size', S.set.size - 4),
+  mirrorH: v => setSetting('mirrorH', typeof v === 'boolean' ? v : !S.set.mirrorH),
+  mirrorV: v => setSetting('mirrorV', typeof v === 'boolean' ? v : !S.set.mirrorV),
+  theme: v => setSetting('theme', v)
+};
+const LABEL = { play: 'Start', pause: 'Pause', stop: 'Stopp', toggle: '', next: 'Nächstes Kapitel', prev: 'Kapitel zurück', top: 'Anfang',
+  chapter: 'Kapitelsprung', speed: 'Tempo', size: 'Schrift', faster: 'Schneller', slower: 'Langsamer',
+  bigger: 'Schrift größer', smaller: 'Schrift kleiner', mirrorH: 'Spiegelung', mirrorV: 'Spiegelung', back: '', fwd: '' };
+function exec(cmd, v, src) {
+  if (S.view !== 'prompter') return;
+  if (!Object.prototype.hasOwnProperty.call(CMDS, cmd)) return;
+  if (typeof v === 'number' && !isFinite(v)) return;
+  CMDS[cmd](v);
+  if (src && LABEL[cmd]) toast((src === 'claude' ? 'Claude: ' : 'Fernbedienung: ') + LABEL[cmd]);
+}
+
+let raf = 0, lastT = 0, dragging = null, hudT = 0;
+function loop(t) {
+  raf = requestAnimationFrame(loop);
+  const dt = lastT ? Math.min(0.1, (t - lastT) / 1000) : 0; lastT = t;
+  const max = maxPos();
+  if (S.target != null) {
+    const d = S.target - S.pos;
+    S.pos += d * Math.min(1, dt * 9);
+    if (Math.abs(d) < 0.6) { S.pos = S.target; S.target = null; }
+  } else if (S.playing && !dragging) {
+    S.pos += pxPerSec() * dt;
+    if (S.pos >= max) { S.pos = max; setPlay(false); }
+  }
+  S.pos = clamp(S.pos, 0, max);
+  track.style.transform = `translate3d(0,${(-S.pos).toFixed(2)}px,0)`;
+  if (t - hudT > 250) { hudT = t; renderHud(); pushPresence(false); }
+}
+function renderHud() {
+  const chs = chapterEls.map(e => e.lastChild.textContent), i = curChapter();
+  $('#pChapter').textContent = chs.length ? (i >= 0 ? `Kapitel ${i + 1}/${chs.length} · ${chs[i]}` : 'Vor Kapitel 1') : (activeScript()?.title || '');
+  const rem = (maxPos() - S.pos) / pxPerSec();
+  $('#pTime').textContent = 'noch ' + fmt(rem) + ' bei Tempo ' + S.set.speed;
+  const n = P2P.on ? P2P.conns.size : remotePeers().length;
+  const r = $('#pRemotes');
+  r.dataset.s = n ? 'live' : ((room && room.connected()) || P2P.status === 'ready' ? 'sync' : '');
+  r.textContent = n ? (n === 1 ? '1 Fernbedienung verbunden' : n + ' Fernbedienungen verbunden') : (room || P2P.status === 'ready' ? 'Keine Fernbedienung' : 'Fernbedienung nicht verfügbar');
+  $('#pCode').textContent = P2P.on && P2P.code ? 'Code ' + P2P.code : '';
+}
+
+/* Touch, Maus, Rad */
+const stage = $('#stage');
+stage.addEventListener('pointerdown', e => {
+  dragging = { y: e.clientY, pos: S.pos, moved: false };
+  try { stage.setPointerCapture(e.pointerId); } catch {}
+});
+stage.addEventListener('pointermove', e => {
+  if (e.pointerType === 'mouse' && !dragging) { showUi(); return; }
+  if (!dragging) return;
+  const dy = e.clientY - dragging.y;
+  if (Math.abs(dy) > 8) dragging.moved = true;
+  if (dragging.moved) { S.target = null; S.pos = clamp(dragging.pos + (S.set.mirrorV ? 1 : -1) * dy, 0, maxPos()); }
+});
+const endDrag = () => { if (dragging && !dragging.moved) setPlay(!S.playing); dragging = null; };
+stage.addEventListener('pointerup', endDrag);
+stage.addEventListener('pointercancel', () => { dragging = null; });
+stage.addEventListener('wheel', e => { e.preventDefault(); S.target = null; S.pos = clamp(S.pos + (S.set.mirrorV ? -1 : 1) * e.deltaY, 0, maxPos()); }, { passive: false });
+
+$('#ctrl').addEventListener('click', e => {
+  const b = e.target.closest('[data-c]'); if (!b) return;
+  const c = b.dataset.c;
+  if (c === 'close') go('editor');
+  else if (c === 'fs') toggleFs();
+  else CMDS[c]();
+  showUi();
+});
+
+document.addEventListener('keydown', e => {
+  if (S.view !== 'prompter' || e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key;
+  const map = {
+    ' ': 'toggle', Enter: 'toggle', b: 'toggle', B: 'toggle', '.': 'toggle', k: 'toggle', F5: 'toggle', Escape: 'pause',
+    ArrowRight: 'next', PageDown: 'next', ArrowLeft: 'prev', PageUp: 'prev',
+    ArrowUp: 'faster', ArrowDown: 'slower', '+': 'bigger', '=': 'bigger', '-': 'smaller',
+    Home: 'top', h: 'mirrorH', H: 'mirrorH', v: 'mirrorV', V: 'mirrorV'
+  };
+  if (k === 'f' || k === 'F') { toggleFs(); e.preventDefault(); return; }
+  const c = map[k]; if (!c) return;
+  e.preventDefault(); CMDS[c](); if (c !== 'toggle') showUi();
+});
+
+let wl = null;
+async function wake(on) {
+  try {
+    if (on && !wl && navigator.wakeLock) { wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => { wl = null; }); }
+    else if (!on && wl) { await wl.release(); wl = null; }
+  } catch { wl = null; }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && S.view === 'prompter') wake(true); });
+function fsEl() { return document.fullscreenElement || document.webkitFullscreenElement; }
+function toggleFs() {
+  const el = document.documentElement;
+  try {
+    if (fsEl()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!req) { toast('Vollbild ist hier nicht verfügbar'); return; }
+    const r = req.call(el);
+    if (r && r.catch) r.catch(() => toast('Vollbild ist hier nicht verfügbar'));
+  } catch { toast('Vollbild ist hier nicht verfügbar'); }
+}
+
+/* ---------- Live-Verbindung ---------- */
+/* Der Prompter meldet seinen Stand zweifach: live über den Raum (sofort)
+   und über den Speicher in live/status (Rückfallweg, alle 3 s beim Abspielen). */
+let presKey = '';
+function prompterState() {
+  const sc = activeScript(), max = maxPos();
+  return {
+    t: (sc?.title || '').slice(0, 80), id: S.activeId || '', pl: S.playing, sp: S.set.speed, sz: S.set.size,
+    mh: S.set.mirrorH, mv: S.set.mirrorV, ch: curChapter(),
+    pr: max ? Math.round(S.pos / max * 1000) / 1000 : 0,
+    rem: Math.round((max - S.pos) / pxPerSec()),
+    chs: chapterEls.slice(0, 40).map(e => e.lastChild.textContent.slice(0, 48))
+  };
+}
+function pushPresence() {
+  const p = S.view === 'prompter' ? prompterState() : null;
+  if (p) syncStatus(p);
+  p2pBroadcast(p);
+  if (!room) return;
+  const obj = { role: S.view, p };
+  const key = JSON.stringify(obj);
+  if (key === presKey) return;
+  presKey = key;
+  room.presence(obj).catch(() => { presKey = ''; });
+}
+let stKey = '', stLast = 0, stTimer = 0, stQ = Promise.resolve(), stP = null;
+function syncStatus(p) {
+  if (!db) return;
+  stP = p;
+  const { pr, rem, ...core } = p;
+  const key = JSON.stringify(core);
+  if (key !== stKey) { stKey = key; clearTimeout(stTimer); stTimer = setTimeout(writeStatus, 250); }
+  else if (S.playing && Date.now() - stLast > 3000) writeStatus();
+}
+function writeStatus(clear) {
+  clearTimeout(stTimer); stLast = Date.now();
+  const body = { p: clear ? null : stP, at: Date.now() };
+  if (clear) stKey = '';
+  stQ = stQ.then(() => db.doc('live/status').set(body)).catch(() => {});
+}
+const livePeers = () => room ? room.peers().filter(p => !p.sameTab && p.presence) : [];
+const remotePeers = () => livePeers().filter(p => p.presence.role === 'remote');
+let dbStatus = null;
+function currentPrompter() {
+  if (P2P.on) return P2P.rconn && P2P.rconn.open && P2P.state && P2P.state.p && typeof P2P.state.p === 'object'
+    ? Object.assign({}, P2P.state.p, { src: 'p2p' }) : null;
+  const ps = livePeers().filter(p => p.presence.role === 'prompter' && p.presence.p && typeof p.presence.p === 'object');
+  if (ps.length) return Object.assign({}, ps.reduce((a, b) => (a.updatedAt >= b.updatedAt ? a : b)).presence.p, { src: 'live' });
+  if (dbStatus && dbStatus.p && typeof dbStatus.p === 'object' && Date.now() - dbStatus.at < 15 * 60 * 1000)
+    return Object.assign({}, dbStatus.p, { src: 'db', at: dbStatus.at });
+  return null;
+}
+
+/* Befehle über den Speicher: live/command hält die letzten Befehle als Warteschlange,
+   damit schnelle Tipps nicht verloren gehen. Claude schreibt in dasselbe Dokument. */
+let cmdQ = Promise.resolve(), sentQ = [], lastSent = 0;
+function sendDb(d) {
+  lastSent = Math.max(Date.now(), lastSent + 1);
+  sentQ.push({ seq: lastSent, cmd: d.cmd, value: d.value ?? null });
+  sentQ = sentQ.slice(-8);
+  const body = { seq: lastSent, cmd: d.cmd, value: d.value ?? null, from: 'remote', queue: sentQ.slice() };
+  cmdQ = cmdQ.then(() => db.doc('live/command').set(body)).catch(() => {});
+}
+function send(cmd, value) {
+  const d = value === undefined ? { cmd } : { cmd, value };
+  try { navigator.vibrate && navigator.vibrate(8); } catch {}
+  if (P2P.on) {
+    if (P2P.rconn && P2P.rconn.open) P2P.rconn.send({ type: 'cmd', ...d });
+    else { $('#rPairState').textContent = 'Nicht verbunden. Code eingeben und „Verbinden“ tippen.'; }
+    return;
+  }
+  if (room && room.connected()) room.emit('cmd', d).catch(() => { if (db) sendDb(d); });
+  else if (db) sendDb(d);
+  else if (bc) bc.postMessage({ type: 'cmd', ...d });
+}
+
+function connState() {
+  if (P2P.on) {
+    if (P2P.status === 'ready') return ['live', 'Bereit für die Fernbedienung'];
+    if (P2P.status === 'offline') return ['', 'Kein Internet: Fernbedienung per Handy gerade nicht möglich. Bluetooth-Clicker funktionieren.'];
+    return ['sync', 'Verbinde mit dem Kopplungsdienst …'];
+  }
+  if (STANDALONE) return ['', 'Fernbedienung per Handy nicht verfügbar. Bluetooth-Clicker funktionieren.'];
+  if (!booted) return ['', 'Verbinde …'];
+  if (room && room.connected()) return ['live', 'Live-Verbindung aktiv'];
+  if (room || db) return ['sync', db ? 'Cloud-Speicher aktiv, Live-Verbindung wird aufgebaut …' : 'Live-Verbindung wird aufgebaut …'];
+  return ['', 'Nur dieses Gerät: keine Fernbedienung möglich'];
+}
+function renderConn() {
+  const [s, t] = connState();
+  for (const id of ['#homeStatus', '#rStatus']) { const el = $(id); el.dataset.s = s; el.textContent = t; }
+}
+
+/* ---------- Fernbedienung ---------- */
+let rChKey = '';
+function renderRemote() {
+  renderConn();
+  if (S.view !== 'remote') return;
+  const p = currentPrompter(), sc = activeScript();
+  const chs = p && Array.isArray(p.chs) ? p.chs.map(String) : (sc ? chaptersOf(sc.text) : []);
+  const ci = p ? (Number(p.ch) | 0) : -1;
+  $('#rTitle').textContent = p ? (String(p.t || '') || 'Ohne Titel') : (sc?.title || 'Kein Skript');
+  $('#rChapter').textContent = p
+    ? (chs.length ? (ci >= 0 ? `Kapitel ${ci + 1} von ${chs.length}: ${chs[ci] || ''}` : 'Vor dem ersten Kapitel') : 'Keine Kapitelmarken')
+    : 'Kein Prompter verbunden. Öffne auf dem iPad „Prompter“.';
+  const pr = p ? clamp(Number(p.pr) || 0, 0, 1) : 0;
+  $('#rProg').style.width = (pr * 100).toFixed(1) + '%';
+  $('#rPct').textContent = p ? Math.round(pr * 100) + ' %' : '';
+  $('#rRemain').textContent = p ? 'noch ' + fmt(Number(p.rem)) : '';
+  const playing = !!(p && p.pl);
+  const rp = $('#rPlay');
+  rp.classList.toggle('playing', playing);
+  rp.innerHTML = (playing ? ICON_PAUSE : ICON_PLAY) + (playing ? 'Pause' : 'Start');
+  $('#rSpeed').textContent = p ? Number(p.sp) || '–' : '–';
+  $('#rSize').textContent = p ? Number(p.sz) || '–' : '–';
+  $('#rMH').setAttribute('aria-pressed', !!(p && p.mh));
+  $('#rMV').setAttribute('aria-pressed', !!(p && p.mv));
+  const src = $('#rSrc');
+  if (P2P.on) renderPair(p);
+  if (!p) { src.dataset.s = ''; src.textContent = P2P.on ? '' : 'Prompter-Stand unbekannt. Befehle werden trotzdem gesendet.'; }
+  else if (p.src === 'live' || p.src === 'p2p') { src.dataset.s = 'live'; src.textContent = p.src === 'p2p' ? 'Direkt mit dem iPad verbunden' : 'Prompter live verbunden'; }
+  else {
+    const age = Math.max(0, Math.round((Date.now() - p.at) / 1000));
+    src.dataset.s = 'sync';
+    src.textContent = 'Über Speicher verbunden · Stand vor ' + (age < 60 ? age + ' s' : fmt(age) + ' Min');
+  }
+  if (P2P.on) {
+    const list = P2P.rconn && P2P.rconn.open && P2P.state && Array.isArray(P2P.state.scripts) ? P2P.state.scripts : [];
+    $('#rScriptWrap').hidden = !list.length;
+    const key = JSON.stringify(list) + '|' + (P2P.state && P2P.state.active);
+    const sel = $('#rScript');
+    if (sel.dataset.key !== key) {
+      sel.dataset.key = key; sel.textContent = '';
+      for (const s of list) if (s && typeof s === 'object') sel.add(new Option(String(s.title || 'Ohne Titel'), String(s.id)));
+      sel.value = String(P2P.state && P2P.state.active || '');
+    }
+  } else $('#rScriptWrap').hidden = !db || S.scripts.size === 0;
+  const key = chs.join('\u0001') + '|' + ci;
+  if (key !== rChKey) {
+    rChKey = key;
+    const ol = $('#rChapters'); ol.textContent = '';
+    chs.forEach((t, i) => {
+      const li = document.createElement('li'); if (i === ci) li.className = 'on';
+      const b = document.createElement('button'); b.textContent = t;
+      b.addEventListener('click', () => send('chapter', i));
+      li.append(b); ol.append(li);
+    });
+    $('#rChEmpty').hidden = chs.length > 0;
+  }
+}
+$('#v-remote').addEventListener('click', e => {
+  const b = e.target.closest('[data-r]'); if (!b) return;
+  // Nur relative Befehle: der Prompter entscheidet selbst, auch wenn sein Stand hier veraltet ist.
+  send(b.dataset.r);
+});
+setInterval(() => { if (S.view === 'remote') renderRemote(); }, 1000);
+$('#rScript').addEventListener('change', e => {
+  if (!e.target.value) return;
+  if (P2P.on) send('script', e.target.value); else setActive(e.target.value, true);
+});
+
+/* ---------- Direktverbindung (nur eigenständige Version) ----------
+   Jedes Gerät meldet sich beim PeerJS-Kopplungsdienst unter einem 4-stelligen Code an.
+   Die Fernbedienung verbindet sich mit dem Code des iPads; danach laufen Befehle und
+   Stand direkt zwischen den Geräten. */
+const PEER_PREFIX = 'colada-prompter-v1-';
+function p2pStart() {
+  if (!P2P.on || P2P.peer) return;
+  let code = LS.get('tp.code', null);
+  if (!/^\d{4}$/.test(code || '')) { code = String(1000 + Math.floor(Math.random() * 9000)); LS.set('tp.code', code); }
+  P2P.code = code; P2P.status = 'connecting';
+  // PROMPTER_PEER_OPTS: nur für Tests mit eigenem Kopplungsserver, sonst gilt der PeerJS-Standarddienst.
+  const peer = new window.Peer(PEER_PREFIX + code, Object.assign({ debug: 0 }, window.PROMPTER_PEER_OPTS || {}));
+  P2P.peer = peer;
+  peer.on('open', () => { P2P.status = 'ready'; P2P.idTries = 0; renderCode(); renderConn(); if (P2P.target && S.view === 'remote') p2pConnect(P2P.target); });
+  peer.on('connection', c => {
+    c.on('open', () => { P2P.conns.add(c); P2P.sentKey = ''; pushPresence(); if (S.view === 'prompter') renderHud(); });
+    c.on('data', d => onHostData(c, d));
+    c.on('close', () => { P2P.conns.delete(c); if (S.view === 'prompter') renderHud(); });
+    c.on('error', () => { P2P.conns.delete(c); });
+  });
+  peer.on('disconnected', () => {
+    if (P2P.peer !== peer) return;
+    P2P.status = 'connecting'; renderConn();
+    setTimeout(() => { try { if (!peer.destroyed) peer.reconnect(); } catch {} }, 2000);
+  });
+  peer.on('error', e => {
+    const t = e && e.type;
+    if (t === 'unavailable-id') {
+      // Nach einem Neuladen ist der alte Code oft noch ein paar Sekunden belegt: erst warten, dann neuen Code.
+      peer.destroy(); P2P.peer = null;
+      if (++P2P.idTries > 4) { LS.set('tp.code', null); P2P.idTries = 0; }
+      setTimeout(p2pStart, 3000);
+    } else if (t === 'peer-unavailable') {
+      P2P.rstatus = 'notfound'; renderRemote();
+    } else if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed' || t === 'browser-incompatible') {
+      P2P.status = 'offline'; renderConn();
+      if (t !== 'browser-incompatible') setTimeout(() => { try { if (!peer.destroyed) peer.reconnect(); } catch {} }, 5000);
+    }
+  });
+}
+function renderCode() {
+  const show = P2P.on && !!P2P.code;
+  $('#homeCode').hidden = !show;
+  $('#homeCodeVal').textContent = P2P.code || '····';
+}
+function p2pBroadcast(p) {
+  if (!P2P.on || !P2P.conns.size) return;
+  const msg = { type: 'state', p: p || null, active: S.activeId || '',
+    scripts: sorted().slice(0, 40).map(s => ({ id: s.id, title: String(s.title || '').slice(0, 80) })) };
+  const key = JSON.stringify(msg);
+  if (key === P2P.sentKey) return;
+  P2P.sentKey = key;
+  P2P.conns.forEach(c => { try { if (c.open) c.send(msg); } catch {} });
+}
+function onHostData(c, d) {
+  if (!d || typeof d !== 'object') return;
+  if (d.type === 'cmd' && typeof d.cmd === 'string') {
+    if (d.cmd === 'script') { const id = String(d.value || ''); if (S.scripts.has(id)) setActive(id, false); }
+    else exec(d.cmd, d.value, 'remote');
+  } else if (d.type === 'import') {
+    importAny(String(d.text || ''), String(d.title || '')).then(sc => {
+      try { c.send({ type: 'imported', ok: !!sc, title: sc ? sc.title : '' }); } catch {}
+      if (sc && S.view === 'prompter') toast('Neues Skript: ' + sc.title);
+    });
+  }
+}
+function p2pConnect(code) {
+  code = String(code || '').replace(/\D/g, '').slice(0, 4);
+  if (code.length !== 4) { P2P.rstatus = 'badcode'; renderRemote(); return; }
+  P2P.target = code; LS.set('tp.target', code);
+  if (code === P2P.code) { P2P.rstatus = 'self'; renderRemote(); return; }
+  if (P2P.rconn) { try { P2P.rconn.close(); } catch {} P2P.rconn = null; }
+  if (!P2P.peer || !P2P.peer.open) { P2P.rstatus = 'waiting'; renderRemote(); return; }
+  P2P.rstatus = 'connecting'; renderRemote();
+  const c = P2P.peer.connect(PEER_PREFIX + code, { reliable: true });
+  P2P.rconn = c;
+  c.on('open', () => { if (P2P.rconn === c) { P2P.rstatus = 'open'; renderRemote(); } });
+  c.on('data', d => {
+    if (P2P.rconn !== c || !d || typeof d !== 'object') return;
+    if (d.type === 'state') { P2P.state = d; P2P.stateAt = Date.now(); renderRemote(); }
+    if (d.type === 'imported') $('#rSendState').textContent = d.ok ? 'Auf dem iPad angelegt: ' + String(d.title || '') : 'Das iPad konnte den Text nicht übernehmen.';
+  });
+  c.on('close', () => { if (P2P.rconn === c) { P2P.rconn = null; P2P.state = null; P2P.rstatus = 'closed'; renderRemote(); } });
+  c.on('error', () => { if (P2P.rconn === c) { P2P.rstatus = 'closed'; renderRemote(); } });
+}
+// Fernbedienung hält die Verbindung: alle 4 s neu versuchen, solange sie offen ist und ein Code gespeichert ist.
+setInterval(() => {
+  if (!P2P.on || S.view !== 'remote' || !P2P.target || P2P.rstatus === 'self') return;
+  if ((P2P.rconn && (P2P.rconn.open || P2P.rstatus === 'connecting')) || !P2P.peer || !P2P.peer.open) return;
+  p2pConnect(P2P.target);
+}, 4000);
+function renderPair(p) {
+  const st = $('#rPairState'), r = P2P.rstatus;
+  const txt = {
+    open: 'Verbunden mit iPad ' + P2P.target + '.',
+    connecting: 'Verbinde mit ' + P2P.target + ' …',
+    waiting: 'Warte auf den Kopplungsdienst …',
+    notfound: 'iPad ' + P2P.target + ' nicht gefunden. Ist die App dort offen und online? Neuer Versuch läuft.',
+    closed: 'Verbindung getrennt. Neuer Versuch läuft …',
+    badcode: 'Bitte den 4-stelligen Code vom iPad eingeben.',
+    self: 'Das ist der Code dieses Geräts. Gib den Code vom iPad ein.'
+  }[r] || (P2P.status === 'offline' ? 'Kein Internet: Verbindung nicht möglich.' : 'Code vom iPad eingeben.');
+  st.textContent = r === 'open' && !p ? 'Verbunden mit iPad ' + P2P.target + '. Dort ist gerade nicht „Prompter“ geöffnet.' : txt;
+  const inp = $('#rCode');
+  if (document.activeElement !== inp && !inp.value) inp.value = P2P.target || '';
+}
+$('#rConnect').addEventListener('click', () => p2pConnect($('#rCode').value));
+$('#rCode').addEventListener('keydown', e => { if (e.key === 'Enter') p2pConnect($('#rCode').value); });
+$('#rSendBtn').addEventListener('click', () => {
+  const text = $('#rSendText').value, title = $('#rSendTitle').value;
+  const st = $('#rSendState');
+  if (!text.trim()) { st.textContent = 'Erst Text oder Import-Link einfügen.'; return; }
+  if (!(P2P.rconn && P2P.rconn.open)) { st.textContent = 'Nicht mit dem iPad verbunden.'; return; }
+  P2P.rconn.send({ type: 'import', text: text.slice(0, 200000), title: title.slice(0, 80) });
+  st.textContent = 'Gesendet …';
+  $('#rSendText').value = ''; $('#rSendTitle').value = '';
+});
+
+/* ---------- Import: Link von Claude oder fertiger Text ----------
+   Link-Format: <App-Adresse>#i=<Base64url von raw-deflate(JSON {t: Titel, x: Text})> */
+function b64urlBytes(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '=';
+  const bin = atob(s), out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+async function decodeImport(code) {
+  const bytes = b64urlBytes(code);
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  const obj = JSON.parse(await new Response(stream).text());
+  return { title: String(obj.t || ''), text: String(obj.x || '') };
+}
+function guessTitle(text) {
+  const first = String(text).split('\n').map(l => l.replace(/^\s*#+\s*/, '').trim()).find(Boolean) || '';
+  return first.split(/\s+/).slice(0, 6).join(' ').slice(0, 60) || 'Importiertes Skript';
+}
+async function importAny(input, title) {
+  input = String(input || '').trim();
+  if (!input) return null;
+  const m = input.match(/(?:^|[#&?])i=([A-Za-z0-9_-]{8,})\s*$/);
+  let t = title, x = input;
+  if (m) {
+    try { const d = await decodeImport(m[1]); t = t || d.title; x = d.text; }
+    catch { return null; }
+  }
+  if (!x.trim()) return null;
+  const sc = newScript(x.slice(0, 200000));
+  sc.title = String(t || '').trim().slice(0, 80) || guessTitle(x);
+  sc.updatedAt = Date.now();
+  writeScript(sc);
+  renderEditor(true);
+  pushPresence();
+  return sc;
+}
+$('#btnImport').addEventListener('click', () => { $('#importBox').hidden = false; $('#importText').focus(); });
+$('#importCancel').addEventListener('click', () => { $('#importBox').hidden = true; $('#importText').value = ''; $('#importState').textContent = ''; });
+$('#importGo').addEventListener('click', async () => {
+  const sc = await importAny($('#importText').value, '');
+  if (!sc) { $('#importState').textContent = 'Das hat nicht geklappt. Ist der Link vollständig kopiert?'; return; }
+  $('#importBox').hidden = true; $('#importText').value = ''; $('#importState').textContent = '';
+  setSaveState('Importiert: ' + sc.title);
+});
+
+/* ---------- Ansichten ---------- */
+const VIEWS = ['home', 'editor', 'prompter', 'remote'];
+function go(v) { const h = v === 'home' ? '' : v; if (location.hash.slice(1) === h) show(v); else location.hash = h; }
+function route() {
+  const h = location.hash.slice(1);
+  if (STANDALONE && h.startsWith('i=')) {
+    try { history.replaceState(null, '', location.pathname + location.search + '#editor'); } catch {}
+    show('editor');
+    importAny(h, '').then(sc => setSaveState(sc ? 'Importiert: ' + sc.title : 'Import-Link ungültig oder unvollständig'));
+    return;
+  }
+  show(VIEWS.includes(h) ? h : 'home');
+}
+function show(v) {
+  const prev = S.view;
+  if (prev === 'prompter' && v !== 'prompter') {
+    setPlay(false); cancelAnimationFrame(raf); raf = 0; wake(false);
+    if (db) writeStatus(true);
+    if (fsEl()) { try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch {} }
+  }
+  if (prev === 'editor' && dirty) saveNow();
+  S.view = v;
+  VIEWS.forEach(n => { $('#v-' + n).hidden = n !== v; });
+  if (v === 'editor') renderEditor(true);
+  if (v === 'prompter') {
+    applySettings();
+    if (keyOf(activeScript()) !== builtFor) { buildTrack(); S.pos = 0; } else S.pos = clamp(S.pos, 0, maxPos());
+    S.target = null; setPlay(false); lastT = 0;
+    if (!raf) raf = requestAnimationFrame(loop);
+    wake(true); renderHud();
+  }
+  if (v === 'remote') { rChKey = ''; renderRemote(); }
+  renderConn();
+  pushPresence(true);
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', route);
+document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go); });
+
+/* Editor-Ereignisse */
+$('#text').addEventListener('input', () => {
+  if (!activeScript()) {
+    const t = $('#text').value, sc = newScript(t);
+    $('#text').value = t;
+    if (t.trim().length > 20) { sc.title = guessTitle(t); $('#title').value = sc.title; }
+  }
+  scheduleSave(); renderChapterList(); renderStats();
+});
+$('#text').addEventListener('keyup', renderChapterList);
+$('#text').addEventListener('click', renderChapterList);
+$('#title').addEventListener('input', () => { if (!activeScript()) newScript(''); scheduleSave(); });
+$('#title').addEventListener('change', saveNow);
+$('#text').addEventListener('blur', saveNow);
+$('#scriptSel').addEventListener('change', e => { if (e.target.value) setActive(e.target.value, true); });
+$('#btnNew').addEventListener('click', () => { newScript(''); $('#title').focus(); $('#title').select(); });
+$('#btnDel').addEventListener('click', deleteActive);
+$('#btnMark').addEventListener('click', insertMark);
+$('#btnAuto').addEventListener('click', autoChapters);
+$('#btnUndo').addEventListener('click', undoAuto);
+for (const [id, k] of [['#setSize', 'size'], ['#setSpeed', 'speed'], ['#setMargin', 'margin'], ['#setLine', 'line']])
+  $(id).addEventListener('input', e => setSetting(k, e.target.value));
+$('#edMH').addEventListener('click', () => setSetting('mirrorH', !S.set.mirrorH));
+$('#edMV').addEventListener('click', () => setSetting('mirrorV', !S.set.mirrorV));
+$$('.seg [data-theme]').forEach(b => b.addEventListener('click', () => setSetting('theme', b.dataset.theme)));
+window.addEventListener('resize', () => { if (S.view === 'prompter') rebuildKeepPos(); });
+
+/* Gleiches Gerät, anderer Tab (nur ohne Cloud) */
+if (bc) bc.onmessage = e => {
+  const d = e.data || {};
+  if (d.type === 'cmd' && !room && !db) exec(String(d.cmd), d.value, 'remote');
+  if (db) return;
+  if (d.type === 'scripts') { loadLocal(); onScriptsChanged(); }
+  if (d.type === 'active' && S.scripts.has(d.id)) { S.activeId = d.id; LS.set('tp.active', d.id); onActiveChanged(); }
+};
+
+/* ---------- Start ---------- */
+function connectDb() {
+  S.scripts.clear();
+  db.collection('scripts').onSnapshot(snap => {
+    snap.docChanges().forEach(ch => {
+      if (ch.type === 'removed') { S.scripts.delete(ch.doc.id); return; }
+      const d = ch.doc.data() || {};
+      S.scripts.set(ch.doc.id, { id: ch.doc.id, title: String(d.title || 'Ohne Titel'), text: String(d.text || ''), updatedAt: Number(d.updatedAt) || 0 });
+    });
+    onScriptsChanged();
+  }, e => console.warn('scripts', e));
+  db.doc('live/state').onSnapshot(s => {
+    const d = s.exists ? s.data() : null;
+    if (d && d.scriptId && String(d.scriptId) !== S.activeId) {
+      S.activeId = String(d.scriptId); LS.set('tp.active', S.activeId);
+      if (S.scripts.has(S.activeId)) onActiveChanged();
+    }
+  }, e => console.warn('state', e));
+  let first = true, lastSeq = 0;
+  db.doc('live/command').onSnapshot(s => {
+    const d = s.exists ? s.data() : null;
+    if (!d) { first = false; return; }
+    const entries = (Array.isArray(d.queue) && d.queue.length ? d.queue : [d])
+      .filter(e => e && typeof e === 'object' && isFinite(Number(e.seq)))
+      .sort((a, b) => Number(a.seq) - Number(b.seq));
+    const top = entries.reduce((m, e) => Math.max(m, Number(e.seq)), 0);
+    if (first) { first = false; lastSeq = top; return; }
+    const src = d.from === 'remote' ? 'remote' : 'claude';
+    for (const e of entries) if (Number(e.seq) > lastSeq) exec(String(e.cmd || ''), e.value ?? undefined, src);
+    lastSeq = Math.max(lastSeq, top);
+  }, e => console.warn('command', e));
+  db.doc('live/status').onSnapshot(s => {
+    const d = s.exists ? s.data() : null;
+    dbStatus = d ? { p: d.p, at: Number(d.at) || 0 } : null;
+    renderRemote();
+  }, e => console.warn('status', e));
+}
+function connectRoom() {
+  room.on('cmd', m => {
+    const d = m.data;
+    if (d && typeof d === 'object' && typeof d.cmd === 'string') exec(d.cmd, d.value, 'remote');
+  }, e => console.warn('room', e));
+  room.onPeers(() => { renderRemote(); if (S.view === 'prompter') renderHud(); });
+  room.onConnection(() => { presKey = ''; pushPresence(true); renderConn(); renderRemote(); });
+}
+async function boot() {
+  loadLocal();
+  if (!S.scripts.has(S.activeId)) { const f = sorted()[0]; S.activeId = f ? f.id : null; }
+  applySettings();
+  route();
+  const cl = window.claude;
+  if (cl && typeof cl.use === 'function') {
+    const [d, r, sm] = await Promise.all([cl.use('db').catch(() => null), cl.use('room').catch(() => null), cl.use('sample').catch(() => null)]);
+    db = d; room = r; sample = sm;
+    $('#autoWrap').hidden = !sample;
+    if (db) connectDb();
+    if (room) connectRoom();
+  }
+  if (STANDALONE) {
+    $('#btnImport').hidden = false;
+    $('#tileRemote').textContent = 'Handy oder zweites Tablet steuert den Prompter. Einmal mit dem Code vom iPad koppeln.';
+    $('#helpRemote').textContent = 'Auf dem Handy dieselbe Adresse öffnen, „Fernbedienung“ wählen und den 4-stelligen Code vom iPad eingeben. Beide Geräte brauchen dafür Internet (WLAN oder Hotspot). Skripte liegen nur auf dem iPad; neue kommen per Einfügen, per Fernbedienung oder per Import-Link von Claude.';
+    const ch = $('#helpClaude');
+    if (ch) ch.textContent = 'Sag Claude „Mach mir einen Prompter-Import-Link für das Skript aus Projekt …“. Claude holt den Text, setzt Kapitel und gibt dir einen Link. Den Link in der App unter „Skript → Import-Link einfügen“ einfügen oder in der Fernbedienung an das iPad schicken.';
+    $('#rPair').hidden = $('#rSend').hidden = !P2P.on;
+    if (P2P.on) p2pStart();
+    try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
+  }
+  booted = true;
+  renderConn(); renderCode(); renderEditor(false); renderRemote(); pushPresence(true);
+}
+boot();
+})();
+</script>
