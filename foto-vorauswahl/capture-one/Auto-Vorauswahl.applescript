@@ -33,8 +33,8 @@ on run
 	end try
 
 	-- Capture One bereit?
-	tell application "Capture One" to set docCount to count of documents
-	if docCount is 0 then
+	tell application "Capture One" to set docOpen to exists current document
+	if not docOpen then
 		display alert appName message ("Bitte zuerst eine Session oder einen Katalog in Capture One öffnen.") as warning
 		return
 	end if

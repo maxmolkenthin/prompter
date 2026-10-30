@@ -6,6 +6,10 @@ on:
     paths: ["foto-vorauswahl/**", ".github/workflows/foto-vorauswahl-macos.yml"]
   workflow_dispatch:
 
+concurrency:
+  group: foto-vorauswahl-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   macos:
     runs-on: macos-latest   # Apple Silicon
@@ -54,21 +58,25 @@ jobs:
           "$PY" foto-vorauswahl/tests/run_all.py "$RUNNER_TEMP/src" "$RUNNER_TEMP/frames" "$RUNNER_TEMP/work" \
             --models "$HOME/Library/Application Support/ColadaCull/engine/models" --seeds 7,11,12
 
-      - name: Geschwindigkeit (300 Bilder, Ordner-Modus mit XMP)
+      - name: Geschwindigkeit (alle Testbilder zusammen, Ordner-Modus mit XMP)
         run: |
           PY="$HOME/Library/Application Support/ColadaCull/venv/bin/python"
           mkdir -p "$RUNNER_TEMP/big"
-          for d in "$RUNNER_TEMP"/work/set1_*; do cp "$d"/*.jpg "$RUNNER_TEMP/big/" 2>/dev/null || true; done
-          i=0; for f in "$RUNNER_TEMP"/big/*.jpg; do i=$((i+1)); mv "$f" "$RUNNER_TEMP/big/X_$(printf %05d $i).jpg"; done
+          i=0
+          for d in "$RUNNER_TEMP"/work/set*_*/; do
+            for f in "$d"*.jpg; do i=$((i+1)); cp "$f" "$RUNNER_TEMP/big/X_$(printf %05d $i).jpg"; done
+          done
           ls "$RUNNER_TEMP/big" | wc -l
+          sysctl -n hw.ncpu machdep.cpu.brand_string
           cd "$HOME/Library/Application Support/ColadaCull/engine"
           time "$PY" -m colada_cull --folder "$RUNNER_TEMP/big" --xmp --no-cache --report "$RUNNER_TEMP/big.html"
           ls "$RUNNER_TEMP/big"/*.xmp | wc -l
 
-      - name: Capture One installieren (Homebrew) und Script gegen das echte Wörterbuch kompilieren
+      - name: Capture One (falls installierbar) und Script gegen das echte Wörterbuch kompilieren
         continue-on-error: true
         run: |
-          brew install --cask capture-one
+          brew search --cask "capture" || true
+          brew install --cask captureone || brew install --cask capture-one-pro || exit 0
           ls -d /Applications/Capture\ One*.app
           C1_APP="$(ls -d /Applications/Capture\ One*.app | sort | tail -n 1)"
           sdef "$C1_APP" > "$RUNNER_TEMP/captureone.sdef"
