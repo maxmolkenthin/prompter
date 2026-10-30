@@ -47,6 +47,12 @@ jobs:
           print(i, "Frames")
           PY
 
+      - name: Capture-One-Script – Syntaxprüfung (Capture-One-Befehle durch Platzhalter ersetzt)
+        run: |
+          python3 foto-vorauswahl/tests/applescript_stub.py foto-vorauswahl/capture-one/Auto-Vorauswahl.applescript "$RUNNER_TEMP/stub.applescript"
+          osacompile -o "$RUNNER_TEMP/stub.scpt" "$RUNNER_TEMP/stub.applescript"
+          echo "Syntax ok"
+
       - name: Einzeltests
         run: |
           PY="$HOME/Library/Application Support/ColadaCull/venv/bin/python"
