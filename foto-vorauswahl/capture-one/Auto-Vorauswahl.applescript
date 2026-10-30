@@ -28,18 +28,17 @@ on run
 	try
 		do shell script "test -x " & quoted form of pythonBin & " && test -d " & quoted form of engineDir
 	on error
-		display alert appName message "Die Analyse-Engine ist nicht installiert." & return & return & "Bitte install.sh aus dem Ordner foto-vorauswahl ausführen." as critical
+		display alert appName message ("Die Analyse-Engine ist nicht installiert." & return & return & "Bitte install.sh aus dem Ordner foto-vorauswahl ausführen.") as critical
 		return
 	end try
 
 	-- Capture One bereit?
-	tell application "Capture One"
-		if (count of documents) is 0 then
-			display alert appName message "Bitte zuerst eine Session oder einen Katalog in Capture One öffnen." as warning
-			return
-		end if
-		set theVariants to selected variants
-	end tell
+	tell application "Capture One" to set docCount to count of documents
+	if docCount is 0 then
+		display alert appName message ("Bitte zuerst eine Session oder einen Katalog in Capture One öffnen.") as warning
+		return
+	end if
+	tell application "Capture One" to set theVariants to selected variants
 
 	if (count of theVariants) < 2 then
 		tell application "Capture One" to tell current document
@@ -47,7 +46,7 @@ on run
 		end tell
 		set n to count of allVariants
 		if n is 0 then
-			display alert appName message "In der aktuellen Sammlung sind keine Bilder." as warning
+			display alert appName message ("In der aktuellen Sammlung sind keine Bilder.") as warning
 			return
 		end if
 		set answer to button returned of (display dialog "Es sind keine Bilder ausgewählt." & return & return & "Alle " & n & " Bilder der aktuellen Sammlung analysieren?" buttons {"Abbrechen", "Alle analysieren"} default button 2 with title appName with icon note)
@@ -150,7 +149,7 @@ on run
 					try
 						set logTail to do shell script "tail -n 15 " & quoted form of logFile
 					end try
-					display alert appName message "Die Analyse wurde unerwartet beendet." & return & return & logTail as critical
+					display alert appName message ("Die Analyse wurde unerwartet beendet." & return & return & logTail) as critical
 					return
 				end if
 				set finished to true
@@ -159,7 +158,7 @@ on run
 	end repeat
 
 	if lastText starts with "fehler" then
-		display alert appName message "Analyse fehlgeschlagen: " & lastText as critical
+		display alert appName message ("Analyse fehlgeschlagen: " & lastText) as critical
 		return
 	end if
 

@@ -35,7 +35,7 @@ on process(folderPath)
 	try
 		do shell script "test -x " & quoted form of pythonBin
 	on error
-		display alert appName message "Die Analyse-Engine ist nicht installiert. Bitte install.sh ausführen." as critical
+		display alert appName message ("Die Analyse-Engine ist nicht installiert. Bitte install.sh ausführen.") as critical
 		return
 	end try
 
@@ -101,7 +101,7 @@ on process(folderPath)
 			try
 				set logTail to do shell script "tail -n 15 " & quoted form of logFile
 			end try
-			display alert appName message "Die Analyse wurde unerwartet beendet." & return & return & logTail as critical
+			display alert appName message ("Die Analyse wurde unerwartet beendet." & return & return & logTail) as critical
 			return
 		end try
 	end repeat
