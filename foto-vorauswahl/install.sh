@@ -52,15 +52,23 @@ say "4/6  KI-Modelle laden (ca. 16 MB)"
 say "5/6  Selbsttest"
 TEST_DIR="$(mktemp -d)"
 "$BASE/venv/bin/python" - "$TEST_DIR" <<'PY'
-import sys, numpy as np
-from PIL import Image
+import sys
+from PIL import Image, ImageDraw
 d = sys.argv[1]
-rng = np.random.default_rng(0)
-img = (rng.random((800, 1200, 3)) * 255).astype(np.uint8)
-for i in range(3):
-    Image.fromarray(img).save(f"{d}/TEST_{i}.jpg", quality=90)
+im = Image.new("RGB", (1500, 1000), (235, 235, 230))
+dr = ImageDraw.Draw(im)
+for k in range(12):
+    dr.rectangle([60 + k * 110, 200 + (k % 3) * 120, 140 + k * 110, 700], fill=(30 + k * 15, 60, 120), outline=(0, 0, 0), width=3)
+    dr.ellipse([80 + k * 110, 760, 130 + k * 110, 810], fill=(200, 40, 40))
+for i in range(3):  # drei Wiederholungen derselben Aufnahme -> 1 Auswahl, 2 Alternativen
+    im.save(f"{d}/TEST_{i}.jpg", quality=92)
 PY
-(cd "$BASE/engine" && "$BASE/venv/bin/python" -m colada_cull --folder "$TEST_DIR" --no-cache)
+RESULT="$(cd "$BASE/engine" && "$BASE/venv/bin/python" -m colada_cull --folder "$TEST_DIR" --no-cache 2>/dev/null)"
+echo "$RESULT"
+if [[ "$RESULT" != *"1 Auswahl, 2 Alternativen"* ]]; then
+  echo "Selbsttest fehlgeschlagen – bitte Ausgabe oben an Max/Claude schicken." >&2
+  exit 1
+fi
 rm -rf "$TEST_DIR"
 
 say "6/6  Capture-One-Script und Mac-App einrichten"
