@@ -1,0 +1,89 @@
+name: Foto-Vorauswahl – Test auf macOS
+
+on:
+  push:
+    branches: ["claude/**"]
+    paths: ["foto-vorauswahl/**", ".github/workflows/foto-vorauswahl-macos.yml"]
+  workflow_dispatch:
+
+jobs:
+  macos:
+    runs-on: macos-14   # Apple Silicon
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer ausführen (wie auf dem Mac der Fotografin)
+        run: bash foto-vorauswahl/install.sh
+
+      - name: Mac-App prüfen
+        run: |
+          test -d "$HOME/Applications/Colada Vorauswahl.app"
+          osadecompile "$HOME/Applications/Colada Vorauswahl.app" | head -n 5
+
+      - name: Testdaten laden
+        run: |
+          mkdir -p "$RUNNER_TEMP/src" "$RUNNER_TEMP/frames"
+          cd "$RUNNER_TEMP/src"
+          B=https://raw.githubusercontent.com/opencv/opencv/4.x/samples/data
+          for f in building.jpg fruits.jpg graf1.png starry_night.jpg baboon.jpg box.png; do curl -sSfLO $B/$f; done
+          B=https://raw.githubusercontent.com/opencv/opencv_extra/4.x/testdata/stitching
+          for f in boat1.jpg boat2.jpg boat3.jpg budapest1.jpg budapest3.jpg a1.png newspaper1.jpg newspaper2.jpg s1.jpg; do curl -sSfLO $B/$f; done
+          B=https://raw.githubusercontent.com/ageitgey/face_recognition/master/examples
+          for f in obama.jpg biden.jpg two_people.jpg hamilton_clip.mp4; do curl -sSfLO $B/$f; done
+          PY="$HOME/Library/Application Support/ColadaCull/venv/bin/python"
+          "$PY" - "$RUNNER_TEMP/src/hamilton_clip.mp4" "$RUNNER_TEMP/frames" <<'PY'
+          import sys, cv2
+          c = cv2.VideoCapture(sys.argv[1]); i = 0
+          while True:
+              ok, fr = c.read()
+              if not ok: break
+              if i % 3 == 0: cv2.imwrite(f"{sys.argv[2]}/h{i:04d}.jpg", fr)
+              i += 1
+          print(i, "Frames")
+          PY
+
+      - name: Einzeltests
+        run: |
+          PY="$HOME/Library/Application Support/ColadaCull/venv/bin/python"
+          "$PY" foto-vorauswahl/tests/test_units.py
+
+      - name: Test-Shootings (mehrere Zufallsvarianten) gegen Soll-Auswahl
+        run: |
+          PY="$HOME/Library/Application Support/ColadaCull/venv/bin/python"
+          "$PY" foto-vorauswahl/tests/run_all.py "$RUNNER_TEMP/src" "$RUNNER_TEMP/frames" "$RUNNER_TEMP/work" \
+            --models "$HOME/Library/Application Support/ColadaCull/engine/models" --seeds 7,11,12
+
+      - name: Geschwindigkeit (300 Bilder, Ordner-Modus mit XMP)
+        run: |
+          PY="$HOME/Library/Application Support/ColadaCull/venv/bin/python"
+          mkdir -p "$RUNNER_TEMP/big"
+          for d in "$RUNNER_TEMP"/work/set1_*; do cp "$d"/*.jpg "$RUNNER_TEMP/big/" 2>/dev/null || true; done
+          i=0; for f in "$RUNNER_TEMP"/big/*.jpg; do i=$((i+1)); mv "$f" "$RUNNER_TEMP/big/X_$(printf %05d $i).jpg"; done
+          ls "$RUNNER_TEMP/big" | wc -l
+          cd "$HOME/Library/Application Support/ColadaCull/engine"
+          time "$PY" -m colada_cull --folder "$RUNNER_TEMP/big" --xmp --no-cache --report "$RUNNER_TEMP/big.html"
+          ls "$RUNNER_TEMP/big"/*.xmp | wc -l
+
+      - name: Capture One installieren (Homebrew) und Script gegen das echte Wörterbuch kompilieren
+        continue-on-error: true
+        run: |
+          brew install --cask capture-one
+          ls -d /Applications/Capture\ One*.app
+          C1_APP="$(ls -d /Applications/Capture\ One*.app | sort | tail -n 1)"
+          sdef "$C1_APP" > "$RUNNER_TEMP/captureone.sdef"
+          grep -n -i -E 'name="(rating|color tag|selected variants|current collection|parent image|path|variant)"' "$RUNNER_TEMP/captureone.sdef" | head -n 40
+          bash foto-vorauswahl/install.sh
+          test -f "$HOME/Library/Scripts/Capture One Scripts/Auto-Vorauswahl.scpt"
+          osadecompile "$HOME/Library/Scripts/Capture One Scripts/Auto-Vorauswahl.scpt" | grep -n -E "rating|color tag|selected variants" | head
+
+      - name: Berichte sichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: berichte
+          path: |
+            ${{ runner.temp }}/work/*.html
+            ${{ runner.temp }}/work/*.tsv
+            ${{ runner.temp }}/captureone.sdef
+          if-no-files-found: ignore

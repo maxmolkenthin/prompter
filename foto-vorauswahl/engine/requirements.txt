@@ -1,0 +1,6 @@
+mediapipe>=0.10.21
+opencv-python-headless>=4.9
+rawpy>=0.21
+numpy>=1.26
+pillow>=10.0
+exifread>=3.0
