@@ -46,7 +46,7 @@ Es wird **nichts gelöscht oder verschoben**. Danach in Capture One nach Farbe G
 
 **Ohne Capture One:** `~/Applications/Colada Vorauswahl.app` öffnen oder einen Ordner auf das Symbol ziehen. Die Sterne werden als XMP-Dateien neben die RAWs geschrieben, Capture One übernimmt sie beim Import. Farbmarkierungen aus XMP liest Capture One laut Nutzerberichten nicht zuverlässig. Im Ordner-Modus zählen deshalb die Sterne: 3 = Auswahl, 1 = Alternative, 0 = aussortiert.
 
-**Geschwindigkeit:** Ein zweiter Lauf auf denselben Bildern mit anderer Strenge ist nach Sekunden fertig, weil die Analyse zwischengespeichert wird.
+**Geschwindigkeit:** Gemessen wurden 183 Bilder in 34 Sekunden auf einem virtuellen Mac mit nur 3 Kernen. Auf einem aktuellen MacBook oder Mac Studio mit 8–12 Kernen sind für 2.000 Bilder grob 3–6 Minuten zu erwarten, inklusive Eintragen in Capture One. Mit echten Katalogen ist das noch nicht gemessen. Ein zweiter Lauf auf denselben Bildern mit anderer Strenge ist nach Sekunden fertig, weil die Analyse zwischengespeichert wird.
 
 ## Grenzen – ehrlich
 
@@ -54,7 +54,8 @@ Es wird **nichts gelöscht oder verschoben**. Danach in Capture One nach Farbe G
 - **Gewollte Bewegungsunschärfe** (Mitzieher, laufende Maschine mit Langzeitbelichtung) wird als verwackelt eingestuft. Für solche Serien „Locker" wählen oder rot markierte Bilder kurz durchsehen.
 - **Feinster Fehlfokus** ist auf den Vorschaubildern (ca. 1600 px) nicht sichtbar. Erkannt wird alles, was in der normalen Ansicht unscharf wirkt, plus Bilder, die innerhalb einer Serie schwächer sind.
 - **Brandneue Kameras:** Kann die RAW-Bibliothek eine Datei nicht lesen, bleibt das Bild unverändert und wird im Bericht als „nicht lesbar" geführt.
-- Getestet wurde mit generierten Test-Shootings: 61 Bilder in sechs Zufallsvarianten, mit bekannter Soll-Auswahl. Gefahren ist das in einer Linux-Umgebung und automatisch auf einem Apple-Silicon-Mac. **Mit echten Capture-One-Katalogen von Picture Colada ist es noch nicht getestet.** Der erste echte Lauf sollte deshalb an einer Kopie oder einem abgeschlossenen Shooting stattfinden.
+- **Getestet** wurde mit generierten Test-Shootings: 61 Bilder je Durchlauf, in bis zu acht Zufallsvarianten, mit bekannter Soll-Auswahl. Bausteine waren echte Fotos und Videobilder. Gefahren ist das in einer Linux-Umgebung und automatisch auf einem Apple-Silicon-Mac (Installer, App, Engine, Syntax des Capture-One-Scripts).
+- **Nicht getestet:** das Zusammenspiel mit einem laufenden Capture One. Capture One lässt sich auf Testservern nicht installieren. Die verwendeten Capture-One-Befehle stammen aus funktionierenden Community-Scripts. Ebenfalls nicht getestet: echte Picture-Colada-Shootings. Der erste echte Lauf sollte deshalb an einem abgeschlossenen Shooting stattfinden.
 
 ## Technik
 
