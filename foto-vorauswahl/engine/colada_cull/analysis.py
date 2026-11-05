@@ -59,6 +59,7 @@ class ImageMetrics:
     embedding: list[float] = field(default_factory=list)
     tiny: list[float] = field(default_factory=list)  # 16x16 Graustufen-Miniatur für Feinvergleich
     error: str = ""
+    inner: str = ""                 # bei EIP: Name der Original-Aufnahme im Paket
 
     def to_dict(self):
         d = asdict(self)

@@ -51,7 +51,7 @@ on process(folderPath)
 	if pickedStrict is false then return
 	set strictKey to my lookup(item 1 of pickedStrict, strictLabels, strictKeys)
 
-	set writeChoice to button returned of (display dialog "Ergebnis als Sterne in XMP-Dateien neben die Bilder schreiben?" & return & return & "(Capture One liest die Sterne beim Import. Vorhandene XMP-Dateien werden ergänzt, nicht ersetzt.)" buttons {"Abbrechen", "Nur Bericht", "XMP schreiben"} default button 3 with title appName)
+	set writeChoice to button returned of (display dialog "Was soll mit dem Ergebnis passieren?" & return & return & "Nur Bericht: Im Ordner wird nichts verändert oder hinzugefügt." & return & "XMP schreiben: Neben RAW/JPG kommt eine kleine .xmp-Datei mit den Sternen (Capture One liest sie beim Import). Neben EIP-Dateien wird nie etwas geschrieben." buttons {"Abbrechen", "XMP schreiben", "Nur Bericht"} default button 3 with title appName)
 	if writeChoice is "Abbrechen" then return
 
 	set stamp to do shell script "date +%Y%m%d-%H%M%S"
@@ -64,7 +64,7 @@ on process(folderPath)
 	if writeChoice is "XMP schreiben" then set xmpArg to " --xmp"
 
 	set cmd to "cd " & quoted form of engineDir & " && nohup " & quoted form of pythonBin & " -m colada_cull --folder " & quoted form of folderPath & ¬
-		" --progress-file " & quoted form of progressFile & " --report " & quoted form of reportFile & ¬
+		" --recursive --progress-file " & quoted form of progressFile & " --report " & quoted form of reportFile & ¬
 		" --mode " & modeKey & " --strictness " & strictKey & xmpArg & " > " & quoted form of logFile & " 2>&1 & echo $!"
 	set pid to do shell script cmd
 
@@ -109,7 +109,7 @@ on process(folderPath)
 		display alert appName message (text 8 thru -1 of lastText) as warning
 		return
 	end if
-	set msg to (text 8 thru -1 of lastText) & return & return & "Vorauswahl = 3 Sterne · Alternative = 1 Stern · aussortiert = 0 Sterne."
+	set msg to (text 8 thru -1 of lastText) & return & return & "Im Prüfbericht steht jede Originaldatei mit Kategorie und Begründung: Top-Auswahl, Reserve, Duplikat/schwächer, aussortiert."
 	set btn to button returned of (display dialog msg buttons {"Ordner zeigen", "Prüfbericht öffnen"} default button 2 with title appName with icon note)
 	if btn is "Prüfbericht öffnen" then
 		do shell script "open " & quoted form of reportFile

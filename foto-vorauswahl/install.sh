@@ -28,7 +28,8 @@ fi
 say "1/6  uv (Python-Verwaltung) prüfen"
 export PATH="$HOME/.local/bin:$PATH"
 if ! command -v uv >/dev/null 2>&1; then
-  curl -LsSf https://astral.sh/uv/install.sh | sh
+  # ohne Änderungen an Shell-Profil oder vorhandenem Python/Homebrew
+  curl -LsSf https://astral.sh/uv/install.sh | env UV_NO_MODIFY_PATH=1 INSTALLER_NO_MODIFY_PATH=1 sh
   export PATH="$HOME/.local/bin:$PATH"
 fi
 uv --version
@@ -60,12 +61,12 @@ dr = ImageDraw.Draw(im)
 for k in range(12):
     dr.rectangle([60 + k * 110, 200 + (k % 3) * 120, 140 + k * 110, 700], fill=(30 + k * 15, 60, 120), outline=(0, 0, 0), width=3)
     dr.ellipse([80 + k * 110, 760, 130 + k * 110, 810], fill=(200, 40, 40))
-for i in range(3):  # drei Wiederholungen derselben Aufnahme -> 1 Auswahl, 2 Alternativen
+for i in range(3):  # drei Wiederholungen derselben Aufnahme -> 1 Top-Auswahl, 1 Reserve, 1 Duplikat
     im.save(f"{d}/TEST_{i}.jpg", quality=92)
 PY
 RESULT="$(cd "$BASE/engine" && "$BASE/venv/bin/python" -m colada_cull --folder "$TEST_DIR" --no-cache 2>/dev/null)"
 echo "$RESULT"
-if [[ "$RESULT" != *"1 Auswahl, 2 Alternativen"* ]]; then
+if [[ "$RESULT" != *"1 Top-Auswahl, 1 Reserve, 1 Duplikate"* ]]; then
   echo "Selbsttest fehlgeschlagen – bitte Ausgabe oben an Max/Claude schicken." >&2
   exit 1
 fi

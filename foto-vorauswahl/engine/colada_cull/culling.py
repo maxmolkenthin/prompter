@@ -10,7 +10,9 @@ import numpy as np
 
 from .analysis import ImageMetrics, Face
 
-PICK, ALT, REJECT, SKIP = "pick", "alt", "reject", "skip"
+# Kategorien: Top-Auswahl, Reserve (zweitbestes Bild je Serie), Duplikat/schwächere Variante, aussortiert
+PICK, ALT, DUP, REJECT, SKIP = "pick", "alt", "dup", "reject", "skip"
+LABELS = {PICK: "Top-Auswahl", ALT: "Reserve", DUP: "Duplikat/schwächer", REJECT: "Aussortiert", SKIP: "Nicht lesbar"}
 
 MODES = {
     # faces: Gesichter auswerten · look: Gewicht "Blick in die Kamera" · eyes: Faktor auf die Augen-zu-Grenze
@@ -41,10 +43,12 @@ class Settings:
     max_gap_s: float = 600.0     # max. Zeit zwischen zwei Bildern derselben Serie
     lookback_groups: int = 3      # A-B-A: späteres A wird der früheren A-Serie zugeordnet
     rating_pick: int = 3
-    rating_alt: int = 1
+    rating_alt: int = 2
+    rating_dup: int = 1
     rating_reject: int = 0
     color_pick: int = 4           # Capture One: 0 keine, 1 rot, 2 orange, 3 gelb, 4 grün, 5 blau, 6 pink, 7 lila
-    color_alt: int = 0
+    color_alt: int = 3
+    color_dup: int = 0
     color_reject: int = 1
 
     @property
@@ -211,6 +215,16 @@ def technical_reject(it: Item, s: Settings) -> str:
     return ""
 
 
+def _cut_off(f: Face) -> bool:
+    x, y, w, h = f.box
+    return x < 0.003 or y < 0.003 or x + w > 0.997 or y + h > 0.997
+
+
+def face_sharpness(it: Item) -> float:
+    vals = [f.sharpness for f in relevant_faces(it.met) if f.sharpness > 0]
+    return max(vals) if vals else 0.0
+
+
 def people_score(it: Item, s: Settings) -> tuple[float | None, str]:
     """Qualität der Gesichter. Gesättigt: "offen" ist offen, kleine Messschwankungen zählen nicht.
     None = keine relevanten Gesichter im Bild."""
@@ -221,6 +235,9 @@ def people_score(it: Item, s: Settings) -> tuple[float | None, str]:
     look = float(np.mean([min(1.0, f.looking / 0.5) for f in faces]))
     closed = [f for f in faces if _eyes_closed(f, s)]
     score = 0.7 * min(eyes) + 0.3 * float(np.mean(eyes)) + s.m["look"] * look
+    # Bildausschnitt: vom Bildrand angeschnittenes Gesicht ist ein schwächeres Bild
+    if any(_cut_off(f) for f in faces):
+        score -= 0.3
     note = ""
     if closed:
         note = "Augen zu" if len(faces) == 1 else f"Augen zu ({len(closed)} von {len(faces)} Personen)"
@@ -239,6 +256,8 @@ def select(items: list[Item], s: Settings) -> list[list[Item]]:
             it.rating, it.color = s.rating_reject, s.color_reject
         elif it.status == SKIP:
             it.rating, it.color = None, None
+        elif it.status == DUP:
+            it.rating, it.color = s.rating_dup, s.color_dup
         else:
             it.rating, it.color = s.rating_alt, s.color_alt
     return groups
@@ -301,18 +320,23 @@ def _select_group(g: list[Item], s: Settings):
     best_sharp = max(it.met.sharpness for it in ok)
     best_ps = max(ps.values()) if ps else 0.0
     margin = 0.06 if s.mode == "people" else 0.12
+    best_face = max((face_sharpness(it) for it in ok), default=0.0) if people else 0.0
 
     def eligible(it):
         sharp_ok = it.met.sharpness >= s.t["sharp_pick"] * best_sharp
         # Bilder ohne erkanntes Gesicht (z. B. Kopf kurz weggedreht) werden neutral behandelt
         people_ok = id(it) not in ps or ps[id(it)] >= best_ps - margin
-        return sharp_ok and people_ok
+        # Augen-/Gesichtsschärfe: Gesicht deutlich weicher als im besten Serienbild -> nicht wählen
+        fs = face_sharpness(it) if people else 0.0
+        face_ok = fs == 0.0 or best_face == 0.0 or fs >= s.t["sharp_pick"] * best_face
+        return sharp_ok and people_ok and face_ok
 
     for it in ok:
         quality = (ps.get(id(it), 0.0) + 0.25 * it.met.sharpness / best_sharp) if best_sharp > 0 else 0
         it.score = (10.0 if eligible(it) else 0.0) + pos[id(it)] / max(1, n - 1) + 0.01 * quality
     k = s.picks_per_group + (1 if n >= 12 else 0)
     ranked = sorted(ok, key=lambda it: -it.score)
+    reserve_left = 1  # pro Serie genau eine Reserve, weitere gleichwertige Bilder sind Duplikate
     for i, it in enumerate(ranked):
         if i < k:
             it.status = PICK
@@ -322,9 +346,23 @@ def _select_group(g: list[Item], s: Settings):
                 it.reason = f"letztes Bild der Serie ({n} Bilder) mit voller Schärfe, Augen/Blick ok"
             else:
                 it.reason = f"letztes scharfes Bild der Serie ({n} Bilder)"
-        else:
+        elif it.score >= 10.0 and reserve_left:
+            reserve_left -= 1
             it.status = ALT
-            it.reason = f"Alternative in Serie ({n} Bilder)"
+            it.reason = f"Reserve: zweitbestes Bild der Serie ({n} Bilder)"
+        elif it.score >= 10.0:
+            it.status = DUP
+            it.reason = f"Duplikat: nahezu identisch mit der Top-Auswahl, gleich gut (Serie mit {n} Bildern)"
+        else:
+            it.status = DUP
+            why = []
+            if it.met.sharpness < s.t["sharp_pick"] * best_sharp:
+                why.append("etwas weniger scharf")
+            if id(it) in ps and ps[id(it)] < best_ps - margin:
+                why.append("Augen/Blick/Ausschnitt schwächer")
+            if people and best_face > 0 and 0 < face_sharpness(it) < s.t["sharp_pick"] * best_face:
+                why.append("Gesicht weniger scharf")
+            it.reason = f"schwächere Variante in Serie ({n} Bilder)" + (": " + ", ".join(why) if why else "")
     for it in ok:
         if it.notes:
             it.reason += " – Hinweis: " + ", ".join(it.notes)

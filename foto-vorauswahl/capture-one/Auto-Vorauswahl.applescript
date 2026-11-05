@@ -2,11 +2,15 @@
 	Auto-Vorauswahl (Colada Cull) – Capture One Script
 	Picture Colada · Version 0.1
 
-	Analysiert die ausgewählten Bilder (oder alle Bilder der aktuellen Sammlung) und vergibt
-	Sterne + Farbmarkierung direkt in Capture One:
-	  Auswahl      = ★★★ + Grün
-	  Alternative  = ★   (keine Farbe)
-	  Aussortiert  = 0 Sterne + Rot   (unscharf, verwackelt, Augen zu, Fehlauslösung)
+	Analysiert die ausgewählten Bilder (oder alle Bilder der aktuellen Sammlung), auch EIP-Pakete.
+	Zwei Möglichkeiten, beim Start wählbar:
+	  - Nur Prüfbericht: Capture One und alle Dateien bleiben unverändert (Standard)
+	  - Sterne + Farben in Capture One setzen:
+	      Top-Auswahl          = ★★★ + Grün
+	      Reserve              = ★★  + Gelb
+	      Duplikat/schwächer  = ★   (keine Farbe)
+	      Aussortiert          = 0 Sterne + Rot   (unscharf, verwackelt, Augen zu, Fehlauslösung)
+	Originaldateien werden nie verschoben, umbenannt oder gelöscht.
 
 	Installation: über install.sh (legt dieses Script nach ~/Library/Scripts/Capture One Scripts/).
 	Danach in Capture One: Menü Scripts > Update Script Menu, dann Scripts > Auto-Vorauswahl.
@@ -68,9 +72,16 @@ on run
 	if pickedStrict is false then return
 	set strictKey to my lookup(item 1 of pickedStrict, strictLabels, strictKeys)
 
-	set overwriteChoice to button returned of (display dialog "Bereits vorhandene Sterne/Farben:" buttons {"Abbrechen", "Nicht anfassen", "Überschreiben"} default button 2 with title appName)
-	if overwriteChoice is "Abbrechen" then return
-	set keepExisting to (overwriteChoice is "Nicht anfassen")
+	set outLabels to {"Nur Prüfbericht – nichts in Capture One verändern", "Sterne + Farben in Capture One setzen"}
+	set pickedOut to choose from list outLabels with title appName with prompt "Was soll mit dem Ergebnis passieren?" default items {item 1 of outLabels} OK button name "Start" cancel button name "Abbrechen"
+	if pickedOut is false then return
+	set reportOnly to (item 1 of pickedOut is item 1 of outLabels)
+	set keepExisting to true
+	if not reportOnly then
+		set overwriteChoice to button returned of (display dialog "Bereits vorhandene Sterne/Farben:" buttons {"Abbrechen", "Nicht anfassen", "Überschreiben"} default button 2 with title appName)
+		if overwriteChoice is "Abbrechen" then return
+		set keepExisting to (overwriteChoice is "Nicht anfassen")
+	end if
 
 	-- Arbeitsdateien
 	set stamp to do shell script "date +%Y%m%d-%H%M%S"
@@ -162,6 +173,18 @@ on run
 		return
 	end if
 
+	set summary to text 8 thru -1 of lastText -- "fertig/" abschneiden
+	if reportOnly then
+		set msg to summary & return & return & "In Capture One wurde nichts verändert. Der Prüfbericht zeigt jede Originaldatei mit Kategorie und Begründung; daneben liegt eine Tabelle (CSV)."
+		set btn to button returned of (display dialog msg buttons {"Ordner zeigen", "Prüfbericht öffnen"} default button 2 with title appName with icon note)
+		if btn is "Prüfbericht öffnen" then
+			do shell script "open " & quoted form of reportFile
+		else
+			do shell script "open " & quoted form of workDir
+		end if
+		return
+	end if
+	
 	-- Ergebnisse in Capture One eintragen
 	set resultLines to paragraphs of (read (POSIX file resultFile) as «class utf8»)
 	set progress description to appName & ": Sterne und Farben setzen"
@@ -200,10 +223,9 @@ on run
 	set AppleScript's text item delimiters to ""
 	set progress completed steps to total
 
-	set summary to text 8 thru -1 of lastText -- "fertig/" abschneiden
 	set msg to summary & return & return & setCount & " Bilder markiert"
 	if skipCount > 0 then set msg to msg & ", " & skipCount & " mit vorhandener Bewertung nicht verändert"
-	set msg to msg & "." & return & return & "Grün + 3 Sterne = Vorauswahl · Rot = aussortiert (nichts wird gelöscht)." & return & "Tipp: In Capture One nach Farbmarkierung Grün filtern."
+	set msg to msg & "." & return & return & "Grün + 3 Sterne = Top-Auswahl · Gelb + 2 Sterne = Reserve · 1 Stern = Duplikat/schwächer · Rot = aussortiert (nichts wird gelöscht)." & return & "Tipp: In Capture One nach Farbmarkierung Grün filtern."
 	set btn to button returned of (display dialog msg buttons {"Prüfbericht öffnen", "Fertig"} default button 2 with title appName with icon note)
 	if btn is "Prüfbericht öffnen" then do shell script "open " & quoted form of reportFile
 end run

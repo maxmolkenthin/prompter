@@ -12,9 +12,9 @@ from datetime import datetime
 from pathlib import Path
 
 from .analysis import ImageMetrics, Models, analyze
-from .loader import capture_time, load_preview
+from .loader import capture_time, load_image
 
-CACHE_VERSION = 5
+CACHE_VERSION = 6
 _models = None
 
 
@@ -57,9 +57,9 @@ def _save_thumb(path: str, rgb):
 def _work(path: str) -> dict:
     t0 = time.time()
     try:
-        rgb, jpeg = load_preview(path)
-        dt, src = capture_time(path, jpeg)
+        rgb, dt, src, inner = load_image(path)
         met = analyze(path, rgb, _models)
+        met.inner = inner or ""
         _save_thumb(path, rgb)
     except Exception as e:  # einzelne defekte Dateien dürfen den Lauf nicht abbrechen
         met = ImageMetrics(path=path, error=f"{type(e).__name__}: {e}")

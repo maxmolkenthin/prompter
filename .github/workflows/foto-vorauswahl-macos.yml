@@ -58,6 +58,13 @@ jobs:
           PY="$HOME/Library/Application Support/ColadaCull/venv/bin/python"
           "$PY" foto-vorauswahl/tests/test_units.py
 
+      - name: EIP-Test (Erkennung, Anzahl, Zuordnung, Originale unverändert, Bericht)
+        run: |
+          PY="$HOME/Library/Application Support/ColadaCull/venv/bin/python"
+          curl -sSfL -o "$RUNNER_TEMP/test.NEF" https://raw.githubusercontent.com/letmaik/rawpy/main/test/iss030e122639.NEF
+          "$PY" foto-vorauswahl/tests/test_eip.py "$RUNNER_TEMP/src" \
+            --models "$HOME/Library/Application Support/ColadaCull/engine/models" --raw "$RUNNER_TEMP/test.NEF"
+
       - name: Test-Shootings (mehrere Zufallsvarianten) gegen Soll-Auswahl
         run: |
           PY="$HOME/Library/Application Support/ColadaCull/venv/bin/python"

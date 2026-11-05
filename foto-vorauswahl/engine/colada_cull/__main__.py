@@ -20,20 +20,21 @@ os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 
 def main(argv=None):
     from .analysis import MODEL_DIR
-    from .culling import Item, Settings, select, MODES, STRICTNESS, PICK, ALT, REJECT, SKIP
-    from .loader import list_images
+    from .culling import Item, Settings, select, MODES, STRICTNESS, PICK, ALT, DUP, REJECT, SKIP, LABELS
+    from .loader import scan_folder
     from .pipeline import analyze_all
 
     ap = argparse.ArgumentParser(prog="colada_cull", description="Automatische Vorauswahl für Fotoshootings")
     src = ap.add_mutually_exclusive_group(required=True)
-    src.add_argument("--folder", help="Ordner mit Bildern (RAW/JPEG/TIFF)")
+    src.add_argument("--folder", help="Ordner mit Bildern (RAW/EIP/JPEG/TIFF)")
     src.add_argument("--list", help="Textdatei mit einem Bildpfad pro Zeile (Reihenfolge bleibt erhalten)")
     ap.add_argument("--recursive", action="store_true", help="Unterordner einbeziehen")
     ap.add_argument("--mode", default="auto", choices=sorted(MODES))
     ap.add_argument("--strictness", default="normal", choices=sorted(STRICTNESS))
     ap.add_argument("--picks", type=int, default=1, help="Bilder pro Serie in der Auswahl")
     ap.add_argument("--rating-pick", type=int, default=3)
-    ap.add_argument("--rating-alt", type=int, default=1)
+    ap.add_argument("--rating-alt", type=int, default=2)
+    ap.add_argument("--rating-dup", type=int, default=1)
     ap.add_argument("--rating-reject", type=int, default=0)
     ap.add_argument("--results", help="TSV-Ausgabe: Sterne, Farbe, Status, Begründung (eine Zeile pro Eingabezeile)")
     ap.add_argument("--report", help="HTML-Prüfbericht schreiben")
@@ -44,8 +45,10 @@ def main(argv=None):
     ap.add_argument("--no-cache", action="store_true")
     a = ap.parse_args(argv)
 
+    ignored = Counter()
     if a.folder:
-        paths = [str(p) for p in list_images(a.folder, a.recursive)]
+        found, ignored = scan_folder(a.folder, a.recursive)
+        paths = [str(p) for p in found]
     else:
         paths = [l.strip() for l in Path(a.list).read_text(encoding="utf-8").splitlines()]
     valid = [p for p in paths if p and os.path.isfile(p)]
@@ -74,7 +77,8 @@ def main(argv=None):
             items.append(it)
 
     s = Settings(mode=a.mode, strictness=a.strictness, picks_per_group=max(1, a.picks),
-                 rating_pick=a.rating_pick, rating_alt=a.rating_alt, rating_reject=a.rating_reject)
+                 rating_pick=a.rating_pick, rating_alt=a.rating_alt, rating_dup=a.rating_dup,
+                 rating_reject=a.rating_reject)
     groups = select(items, s)
 
     if a.results:
@@ -98,22 +102,32 @@ def main(argv=None):
             sc = sidecar_path(Path(it.path))
             if it.status == SKIP or sc in seen:  # gleicher Dateiname mit anderer Endung: nur einmal
                 continue
+            if Path(it.path).suffix.lower() == ".eip":  # EIP: Bewertung gehört in Capture One, nichts daneben schreiben
+                continue
             seen.add(sc)
             try:
                 write_sidecar(it.path, it.rating, it.color)
             except OSError as e:
                 print(f"XMP nicht geschrieben: {it.path}: {e}", file=sys.stderr)
 
-    if a.report:
-        from .report import write_report
-        title = f"Vorauswahl – {Path(a.folder).name}" if a.folder else "Vorauswahl"
-        write_report(items, groups, s, a.report, title=title)
-
     c = Counter(it.status for it in items)
-    summary = (f"{len(items)} Bilder in {len(groups)} Serien: {c[PICK]} Auswahl, {c[ALT]} Alternativen, "
-               f"{c[REJECT]} aussortiert ({time.time() - t0:.0f} s)")
+    analysed_ok = len(items) - c[SKIP]
+    types = Counter(Path(it.path).suffix.lower() for it in items if it.status != SKIP)
+    inventory = dict(found=len(items), analysed=analysed_ok, skipped=c[SKIP], ignored=dict(ignored),
+                     types=dict(types), missing=len(paths) - len(valid))
+
+    if a.report:
+        from .report import write_report, write_csv
+        title = f"Vorauswahl – {Path(a.folder).name}" if a.folder else "Vorauswahl"
+        write_report(items, groups, s, a.report, title=title, inventory=inventory)
+        write_csv(items, Path(a.report).with_suffix(".csv"))
+
+    summary = (f"{analysed_ok} Fotos analysiert, {len(groups)} Serien: {c[PICK]} Top-Auswahl, {c[ALT]} Reserve, "
+               f"{c[DUP]} Duplikate/schwächer, {c[REJECT]} aussortiert ({time.time() - t0:.0f} s)")
+    if types:
+        summary += " · " + ", ".join(f"{n}× {e.lstrip('.').upper()}" for e, n in types.most_common())
     if c[SKIP]:
-        summary += f" – {c[SKIP]} Datei(en) nicht analysierbar, unverändert"
+        summary += f" – {c[SKIP]} Datei(en) nicht lesbar, unverändert"
     print(summary)
     _write_progress(a.progress_file, "fertig", summary)
     return 0
